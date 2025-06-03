@@ -1,0 +1,14 @@
+name: protein-fes
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - nglview
+  - pandas
+  - mdtraj
+  - numpy
+  - scipy
+  - pymol-open-source
+  - py3Dmol
+  - ipywidgets 
+  - matplotlib
