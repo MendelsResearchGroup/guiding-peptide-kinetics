@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e 
 
 # Example: ./prod_run.sh [--force]
 
@@ -33,7 +34,7 @@ gmx grompp -f ../md-charmm.mdp -c npt.gro -t npt.cpt -p topol.top -o md.tpr
 printf "\n${YELLOW}---------- [Step 2: MD Simulation] ----------${NC}\n"
 if [[ "$FORCE" == true || ! -f md.edr ]]; then
   echo "Running MD Simulation with mdrun..."
-  gmx mdrun -ntmpi 1 -ntomp 16 -pin on -v -deffnm md -nsteps 30000
+  gmx mdrun -ntmpi 1 -ntomp 16 -pin on -v -deffnm md -nb gpu -pme gpu -nsteps 10000 
 else
   echo "MD output (md.edr) already exists. Skipping mdrun."
 fi

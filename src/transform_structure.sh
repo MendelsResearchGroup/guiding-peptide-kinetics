@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e 
 
 # Usage: ./prepare_structure.sh <base_filename>
 # Example: ./prepare_structure.sh 1fjs

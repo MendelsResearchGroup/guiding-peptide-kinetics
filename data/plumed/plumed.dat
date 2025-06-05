@@ -1,25 +1,23 @@
-# Activate MOLINFO functionalities
-MOLINFO STRUCTURE=../data/diala/dialaA.pdb
-
-# Compute the backbone dihedral angle phi, defined by atoms C-N-CA-C
-# you should use MOLINFO shortcuts
-phi: TORSION ATOMS=@phi-2
-# Compute the backbone dihedral angle psi, defined by atoms N-CA-C-N
-# here also you should to use MOLINFO shortcuts
-psi: TORSION ATOMS=@psi-2 
-
-# Activate well-tempered metadynamics in phi
-metad: METAD ARG=phi ... 
-   # Deposit a Gaussian every 500 time steps, with initial height 
-   # equal to 1.2 kJ/mol and bias factor equal to 8 
-   PACE=500 HEIGHT=1.2 BIASFACTOR=8 
-
-   # Gaussian width (sigma) should be chosen based on the CV fluctuations in unbiased run 
-   # try 1/2 or 1/3 of the estimated fluctuations 
-   SIGMA=0.3 
-
-   # Gaussians will be written to file and also stored on grid 
-   FILE=HILLS GRID_MIN=-pi GRID_MAX=pi 
-...
-# Print both collective variables on COLVAR file every 10 steps
-PRINT ARG=phi,psi FILE=COLVAR STRIDE=1 
+# calculate  CVs for HLDA
+MOLINFO STRUCTURE=reference.pdb MOLTYPE=protein
+WHOLEMOLECULES RESIDUES=all MOLTYPE=protein
+rmsd: RMSD REFERENCE=reference.pdb TYPE=OPTIMAL NOPBC
+e2e: DISTANCE ATOMS=@N-0,@O-9 NOPBC
+rg: GYRATION TYPE=RADIUS
+# distances
+d1: DISTANCE ATOMS=23,149 NOPBC
+d2: DISTANCE ATOMS=120,46 NOPBC
+d3: DISTANCE ATOMS=56,101 NOPBC
+d4: DISTANCE ATOMS=56,108 NOPBC
+d5: DISTANCE ATOMS=87,101 NOPBC
+d6: DISTANCE ATOMS=72,87 NOPBC
+d7: DISTANCE ATOMS=15,36 NOPBC
+d8: DISTANCE ATOMS=15,112 NOPBC
+d9: DISTANCE ATOMS=15,140 NOPBC
+d10: DISTANCE ATOMS=36,112 NOPBC
+d11: DISTANCE ATOMS=36,140 NOPBC
+d12: DISTANCE ATOMS=112,140 NOPBC
+PRINT ...
+ARG=rmsd,e2e,rg,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12
+FILE=COLVAR STRIDE=100
+... PRINT
