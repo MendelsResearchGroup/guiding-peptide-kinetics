@@ -1,6 +1,3 @@
-import nglview as ng
-import pandas as pd
-import mdtraj as md
 
 
 # import pymol

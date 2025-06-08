@@ -3,13 +3,9 @@
 # Usage: ./run_nvt_npt.sh <base_filename> [-f|--force]
 # Example: ./run_nvt_npt.sh 1fjs --force
 
-CYAN='\033[1;36m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+source "$(dirname "$0")/config.sh"
 
 BASE=$1
-INPUT_DIR=data
-OUTPUT_DIR=data/output
 FORCE=false
 
 # Parse optional flags
