@@ -19,10 +19,10 @@ fig, axes = plt.subplots(rows, cols, figsize=(6 * cols, 4 * rows))
 axes = axes.fmlatten() if n > 1 else [axes]
 
 for i, (file, label) in enumerate(pairs):
-    df = pd.read_csv(file, sep='\\s+', header=None, names=['time', label])
-    x = df['time'].to_numpy()
+    df = pd.read_csv(file, sep="\\s+", header=None, names=["time", label])
+    x = df["time"].to_numpy()
     y = df[label].to_numpy()
-    
+
     axes[i].plot(x, y, label=label)
     axes[i].set_xlabel("Time (ps)")
     axes[i].set_ylabel(label)

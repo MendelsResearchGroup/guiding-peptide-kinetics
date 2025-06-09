@@ -23,7 +23,7 @@ cd "$OUTPUT_DIR" || { echo "Output directory not found! Exiting."; exit 1; }
 
 printf "\n${YELLOW}---------- [MD Simulation] ----------${NC}\n"
 if [[ "$FORCE" == true || ! -f md.edr ]]; then
-  gmx mdrun -ntmpi 1 -ntomp 8 -pin on -v -deffnm md -nb cpu -pme cpu -nsteps 2000000 --plumed ../../src/plumed/hlda.dat
+  gmx mdrun -ntmpi 1 -ntomp 8 -pin on -v -deffnm md -nb cpu -pme cpu -nsteps 50000000 --plumed ../../src/plumed/hlda.dat
 else
   echo "MD output (md.edr) already exists. Skipping mdrun."
 fi
