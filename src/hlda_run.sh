@@ -21,9 +21,12 @@ printf "===============================================${NC}\n"
 (
 cd "$OUTPUT_DIR" || { echo "Output directory not found! Exiting."; exit 1; }
 
+printf "\n${CYAN}---------- [Preparation] ----------${NC}\n"
+gmx grompp -f ../md-charmm.mdp -c npt.gro -t npt.cpt -p topol.top -o hlda_run.tpr
+
 printf "\n${YELLOW}---------- [MD Simulation] ----------${NC}\n"
 if [[ "$FORCE" == true || ! -f md.edr ]]; then
-  gmx mdrun -ntmpi 1 -ntomp 8 -pin on -v -deffnm md -nb cpu -pme cpu -nsteps 50000000 --plumed ../../src/plumed/hlda.dat
+  gmx mdrun -ntmpi 1 -ntomp 6 -v -deffnm hlda_run -nb cpu -pme cpu -nsteps 5000000 --plumed ../../src/plumed/hlda.dat
 else
   echo "MD output (md.edr) already exists. Skipping mdrun."
 fi
@@ -31,7 +34,7 @@ fi
 printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
 printf "1\n1\n" | gmx trjconv -s md.tpr -f md.xtc -o md_center.xtc -center -pbc mol
 
-printf "\n${YELLOW}---------- [ Validate Periodic Distance] ----------${NC}\n"
+printf "\n${YELLOW}---------- [Validate Periodic Distance] ----------${NC}\n"
 printf "1\n" | gmx mindist -s md.tpr -f md_center.xtc -pi -od mindist.xvg
 
 printf "\n${CYAN}---------- [RMSD Stability Check] ----------${NC}\n"
@@ -42,7 +45,7 @@ printf "\n${YELLOW}---------- [Report Methods] ----------${NC}\n"
 gmx report-methods -s md.tpr
 
 printf "\n${CYAN}===============================================\n"
-echo "GROMACS Simulation Script Complete"
+echo "Biased with HLDA Simulation Script Complete"
 printf "===============================================${NC} \n"
 
 )

@@ -24,12 +24,14 @@ ridge = 1e-6
 
 
 def load_descriptors(path) -> NDArray[np.float64]:
-    df = pd.read_csv(path, comment="#", sep=r"\s+", names=all_cols, engine="python")
+    df = pd.read_csv(
+        path, comment="#", sep=r"\s+", names=descriptor_cols, engine="python"
+    )
     return df[descriptor_cols].astype(float).to_numpy()
 
 
-A = load_descriptors(folded_path)  # folded
-B = load_descriptors(unfolded_path)  # unfolded
+A = load_descriptors(folded_path)
+B = load_descriptors(unfolded_path)
 
 
 mu_A, mu_B = A.mean(0), B.mean(0)
@@ -49,9 +51,9 @@ s_unfolded = B @ W
 
 print("\nHLDA weights:")
 for i, w in enumerate(W, 1):
-    print(f"  W_{i:02d} = {w:+.6f}")
+    print(f"  W_{i} = {w:+.4f}")
 print("\ns_HLDA (folded):   ", s_folded[:10])
-print("\ns_HLDA (unfolded): ", s_unfolded[10])
+print("\ns_HLDA (unfolded): ", s_unfolded[:10])
 
 
 # plt.figure(figsize=(6, 4))

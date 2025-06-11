@@ -17,13 +17,13 @@ To generate a metadynamics run biased by HLDA values, follow these steps:
 3. **Run a production MD simulation**  
    Perform an unbiased MD simulation starting from the equilibrated structure:  
    ```bash
-   ./src/prod_run.sh
+   ./src/base_run.sh
    ```
 
 4. **Stretch the protein to its unfolded state**  
    Run a biased simulation that gradually stretches the protein and then follows with an unbiased run starting from the stretched conformation:  
    ```bash
-   ./src/stretch.sh 5awl
+   ./src/stretch_run.sh 5awl
    ```  
    This will generate a `COLVAR_STRETCH` file containing descriptors from the unfolded trajectory.
 

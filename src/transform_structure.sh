@@ -38,7 +38,7 @@ printf "${YELLOW}\n---------- [Step 4: GROMACS Processing] ----------${NC}\n"
 cd "$OUTPUT_DIR"
 
   printf "${CYAN}Generating topology and structure${NC}\n"
-  gmx pdb2gmx -f "${BASE}_protein.pdb" -o "${BASE}_processed.gro" -water tip3p -ff charmm22star
+  gmx pdb2gmx -f "${BASE}_protein.pdb" -o "${BASE}_processed.gro" -water tip3p -ff charmm22star -ignh
 
   printf "${YELLOW}Defining simulation box${NC}\n"
   gmx editconf -f "${BASE}_processed.gro" -o "${BASE}_newbox.gro" -c -d 1.0 -bt dodecahedron

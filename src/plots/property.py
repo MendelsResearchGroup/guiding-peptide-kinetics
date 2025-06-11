@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 import math
+from io import StringIO
 
 if len(sys.argv) < 3 or (len(sys.argv) - 1) % 2 != 0:
     print("Usage: python plot_property.py file1.xvg label1 file2.xvg label2 ...")
@@ -16,13 +17,39 @@ cols = min(2, n)
 rows = math.ceil(n / cols)
 
 fig, axes = plt.subplots(rows, cols, figsize=(6 * cols, 4 * rows))
-axes = axes.fmlatten() if n > 1 else [axes]
+axes = axes.flatten() if n > 1 else [axes]
+
 
 for i, (file, label) in enumerate(pairs):
-    df = pd.read_csv(file, sep="\\s+", header=None, names=["time", label])
+    with open(file) as f:
+        lines = f.readlines()
+
+    # Extract header from the first line
+    header_line = lines[0]
+    if header_line.startswith("#! FIELDS"):
+        col_names = header_line.strip().split()[2:]  # skip "#!", "FIELDS"
+        data_lines = lines[1:]
+    else:
+        raise ValueError("Missing '#! FIELDS' line in file")
+
+    df = pd.read_csv(
+        StringIO("".join(data_lines)), delim_whitespace=True, names=col_names
+    )
+
+    # Validate requested label exists
+    if label not in df.columns:
+        print(f"Label '{label}' not found in file: {file}")
+        continue
+
+    df["time"] = pd.to_numeric(df["time"], errors="coerce")
+    df[label] = pd.to_numeric(df[label], errors="coerce")
+    df.dropna(inplace=True)
+
     x = df["time"].to_numpy()
     y = df[label].to_numpy()
 
+    print(x)
+    print(y)
     axes[i].plot(x, y, label=label)
     axes[i].set_xlabel("Time (ps)")
     axes[i].set_ylabel(label)
