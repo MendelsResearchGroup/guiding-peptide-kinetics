@@ -2,7 +2,7 @@
 
 # Example: ./hlda_run.sh [--force]
 
-source "$(dirname "$0")/config.sh"
+source "$(dirname "$0")/common/config.sh"
 FORCE=false
 
 # Parse arguments
@@ -19,33 +19,36 @@ echo "Force Run: $FORCE"
 printf "===============================================${NC}\n"
 
 (
-cd "$OUTPUT_DIR" || { echo "Output directory not found! Exiting."; exit 1; }
+  cd "$OUTPUT_DIR" || {
+    echo "Output directory not found! Exiting."
+    exit 1
+  }
 
-printf "\n${CYAN}---------- [Preparation] ----------${NC}\n"
-gmx grompp -f ../md-charmm.mdp -c npt.gro -t npt.cpt -p topol.top -o hlda_run.tpr
+  printf "\n${CYAN}---------- [Preparation] ----------${NC}\n"
+  gmx grompp -f ../md-charmm.mdp -c npt.gro -t npt.cpt -p topol.top -o hlda_run.tpr
 
-printf "\n${YELLOW}---------- [MD Simulation] ----------${NC}\n"
-if [[ "$FORCE" == true || ! -f md.edr ]]; then
-  gmx mdrun -ntmpi 1 -ntomp 6 -v -deffnm hlda_run -nb cpu -pme cpu -nsteps 5000000 --plumed ../../src/plumed/hlda.dat
-else
-  echo "MD output (md.edr) already exists. Skipping mdrun."
-fi
+  printf "\n${YELLOW}---------- [MD Simulation] ----------${NC}\n"
+  if [[ "$FORCE" == true || ! -f hlda_run.edr ]]; then
+    gmx mdrun -ntmpi 1 -ntomp 6 -v -deffnm hlda_run -nb cpu -pme cpu -nsteps 5000000 --plumed ../../src/plumed/hlda.dat
+  else
+    echo "MD output (hlda_run.edr) already exists. Skipping mdrun."
+  fi
 
-printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
-printf "1\n1\n" | gmx trjconv -s md.tpr -f md.xtc -o md_center.xtc -center -pbc mol
+  printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
+  printf "1\n1\n" | gmx trjconv -s hlda_run.tpr -f hlda_run.xtc -o hlda_run_center.xtc -center -pbc mol
 
-printf "\n${YELLOW}---------- [Validate Periodic Distance] ----------${NC}\n"
-printf "1\n" | gmx mindist -s md.tpr -f md_center.xtc -pi -od mindist.xvg
+  printf "\n${YELLOW}---------- [Validate Periodic Distance] ----------${NC}\n"
+  printf "1\n" | gmx mindist -s hlda_run.tpr -f hlda_run_center.xtc -pi -od mindist.xvg
 
-printf "\n${CYAN}---------- [RMSD Stability Check] ----------${NC}\n"
-printf "4\n1\n" | gmx rms -s em.tpr -f md_center.xtc -o rmsd_xray.xvg -tu ns -xvg none
-python3 ../../src/plot_property.py rmsd_xray.xvg RMSD
+  printf "\n${CYAN}---------- [RMSD Stability Check] ----------${NC}\n"
+  printf "4\n1\n" | gmx rms -s em.tpr -f hlda_run_center.xtc -o rmsd_xray.xvg -tu ns -xvg none
+  python3 ../../src/plots/property.py rmsd_xray.xvg RMSD
 
-printf "\n${YELLOW}---------- [Report Methods] ----------${NC}\n"
-gmx report-methods -s md.tpr
+  printf "\n${YELLOW}---------- [Report Methods] ----------${NC}\n"
+  gmx report-methods -s hlda_run.tpr
 
-printf "\n${CYAN}===============================================\n"
-echo "Biased with HLDA Simulation Script Complete"
-printf "===============================================${NC} \n"
+  printf "\n${CYAN}===============================================\n"
+  echo "Biased with HLDA Simulation Script Complete"
+  printf "===============================================${NC} \n"
 
 )

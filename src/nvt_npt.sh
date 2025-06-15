@@ -3,7 +3,7 @@
 # Usage: ./run_nvt_npt.sh <base_filename> [-f|--force]
 # Example: ./run_nvt_npt.sh 1fjs --force
 
-source "$(dirname "$0")/config.sh"
+source "$(dirname "$0")/common/config.sh"
 
 BASE=$1
 FORCE=false

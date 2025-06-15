@@ -1,10 +1,7 @@
-MOLINFO STRUCTURE=reference.pdb 
-WHOLEMOLECULES RESIDUES=all
+MOLINFO STRUCTURE=reference.pdb MOLTYPE=protein
+WHOLEMOLECULES RESIDUES=all MOLTYPE=protein
 
 rmsd: RMSD REFERENCE=reference.pdb TYPE=OPTIMAL NOPBC
-
-e2e:  DISTANCE ATOMS=@N-0,@O-9 NOPBC
-rg:   GYRATION TYPE=RADIUS ATOMS=@back-0,@back-1,@back-2,@back-3,@back-4,@back-5,@back-6,@back-7,@back-8,@back-9 NOPBC
 
 d1:  DISTANCE ATOMS=23,149 NOPBC
 d2:  DISTANCE ATOMS=120,46 NOPBC
@@ -21,14 +18,13 @@ d12: DISTANCE ATOMS=112,140 NOPBC
 
 s_hlda: COMBINE ARG=d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12 COEFFICIENTS=0.2811,0.7997,0.5035,-0.0955,0.0693,0.0072,-0.0097,0.0033,0.0056,0.1003,0.0355,-0.09496 PERIODIC=NO
 
-metad: METAD ARG=s_hlda
-        PACE=500 HEIGHT=2.82 BIASFACTOR=8 SIGMA=0.01
+stop_simulation: CUSTOM ARG=rmsd FUNC=step(x-0.4) PERIODIC=NO
+
+metad: METAD ARG=s_hlda ...
+        PACE=5000 HEIGHT=2.82 BIASFACTOR=8 SIGMA=0.01 
         FILE=HILLS_HLDA___ID__ GRID_MIN=-8 GRID_MAX=8
+        ACCELERATION
 ...
 
-stop_simulation: CUSTOM ARG=rmsd FUNC=step(rmsd-0.5) PERIODIC=NO
 
-
-PRINT ARG=stop_simulation,rmsd,e2e,s_hlda,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12
-      FILE=HLDA_COLVAR___ID__ STRIDE=100
-...
+PRINT ARG=s_hlda,metad.bias,metad.acc,stop_simulation,rmsd FILE=HLDA_COLVAR___ID__ STRIDE=500
