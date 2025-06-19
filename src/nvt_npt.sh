@@ -3,12 +3,12 @@
 # Usage: ./run_nvt_npt.sh <base_filename> [-f|--force]
 # Example: ./run_nvt_npt.sh 1fjs --force
 
+BASE=$1
+
 source "$(dirname "$0")/common/config.sh"
 
-BASE=$1
 FORCE=false
 
-# Parse optional flags
 for arg in "$@"; do
     if [[ "$arg" == "--force" || "$arg" == "-f" ]]; then
         FORCE=true

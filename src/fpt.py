@@ -4,8 +4,8 @@ from pathlib import Path
 import pandas as pd
 from STiMetaD import STiMetaD as STM
 
-base_path = Path("./data/output")
-max_runs = 4
+base_path = Path("./data/output/chignolin")
+max_runs = 20
 
 colnames = ["time", "s_hlda", "metad.bias", "metad.acc", "stop_simulation", "rmsd"]
 
@@ -28,7 +28,9 @@ for i in range(max_runs):
         warnings.append(f"[{index_str}] Error reading {run_path}: {e}")
         continue
 
-    folded_row = df[df["stop_simulation"] == 1.0]
+    # print(df["rmsd"].max())
+    folded_row = df[df["rmsd"] > 0.101]
+
     if folded_row.empty:
         warnings.append(f"[{index_str}] No folding (stop_simulation==1.0) found.")
         continue
@@ -62,8 +64,8 @@ if not summary_df.empty:
     tstar = estimator.estimateTstar(samples=samples) / 1e6
 
     print("ST-iMetaD Estimates:")
-    print(f"  MFPT  ≈ {mfpt:.3f} µs")
-    print(f"  k     ≈ {rate:.3f} 1/µs")
-    print(f"  t*    ≈ {tstar:.3f} µs")
+    print(f"  MFPT  ≈ {mfpt} µs")
+    print(f"  k     ≈ {rate} 1/µs")
+    print(f"  t*    ≈ {tstar} µs")
 else:
     print("\n No folding samples collected. Cannot estimate kinetics.")

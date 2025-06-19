@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 #
-# Launch ONE HLDA–Metadynamics replica in its own sub-folder.
-#
 # Usage:
-#   ./fpt_run.sh <ID> [--force]
+#   ./fpt_run.sh <ID> <PROTEIN> [--force]
 # Example:
-#   ./fpt_run.sh 7           # writes to data/output/run_007/
-#   ./fpt_run.sh 7 --force   # overwrite if already exists
+#   ./fpt_run.sh 7 chignolin           # writes to data/output/chignolin/run_007/
+#   ./fpt_run.sh 7 chignolin --force   # overwrite if already exists
 #
 set -euo pipefail
-source "$(dirname "$0")/common/config.sh"
 
 # ------------------ constants ------------------
 MDP="md-charmm.mdp"
@@ -18,18 +15,24 @@ CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
 PLUMED_TEMPLATE="src/fpt_plumed.dat"
-NSTEPS=10000000
+NSTEPS=8000000
 
 # ------------------ parse args ------------------
-if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <ID> [--force]" >&2
+if [[ $# -lt 2 ]]; then
+    echo "Usage: $0 <ID> <PROTEIN> [--force]" >&2
     exit 1
 fi
+
 RUN_ID=$(printf "%03d" "$1")
-FORCE=false && [[ ${2:-} =~ ^(-f|--force)$ ]] && FORCE=true
+PROTEIN="$2"
+BASE="$PROTEIN"
+
+source "$(dirname "$0")/common/config.sh"
+
+FORCE=false && [[ ${3:-} =~ ^(-f|--force)$ ]] && FORCE=true
 
 DEFFNM="run_${RUN_ID}"
-RUN_DIR="run_${RUN_ID}"
+RUN_DIR="${PROTEIN}/run_${RUN_ID}"
 TPR="${DEFFNM}.tpr"
 PLUMED="${DEFFNM}_plumed.dat"
 
@@ -39,8 +42,8 @@ PLUMED="${DEFFNM}_plumed.dat"
         exit 1
     }
 
-    # ------------------ setup replica folder ------------------
-    if [[ -d $RUN_DIR && $FORCE == false ]]; then
+    # ------------------ Setup replica folder ------------------
+    if [[ -d "$RUN_DIR" && $FORCE == false ]]; then
         echo "Run folder $RUN_DIR exists – use --force to overwrite" >&2
         exit 1
     fi
@@ -60,7 +63,7 @@ PLUMED="${DEFFNM}_plumed.dat"
     if [[ "$FORCE" == true || ! -f ${DEFFNM}.edr ]]; then
         gmx mdrun -ntmpi 1 -ntomp 6 -v \
             -deffnm "$DEFFNM" -nsteps $NSTEPS \
-            -nb cpu -pme cpu --plumed "$PLUMED"
+            -nb gpu -pme gpu --plumed "$PLUMED"
     else
         echo "${DEFFNM}.edr exists – skipping mdrun"
     fi
