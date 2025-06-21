@@ -57,11 +57,11 @@ PLUMED="${DEFFNM}_plumed.dat"
     cd "$RUN_DIR"
 
     printf "\n${CYAN}>> [grompp] Generating TPR: $TPR${NC}\n"
-    gmx grompp -f "$MDP" -c "$GRO" -t "$CPT" -p "$TOP" -o "$TPR"
+    gmx_mpi grompp -f "$MDP" -c "$GRO" -t "$CPT" -p "$TOP" -o "$TPR"
 
     printf "\n${YELLOW}>> [mdrun] Starting MD with HLDA bias${NC}\n"
     if [[ "$FORCE" == true || ! -f ${DEFFNM}.edr ]]; then
-        gmx mdrun -ntmpi 1 -ntomp 6 -v \
+        gmx_mpi mdrun -ntmpi 1 -ntomp 6 -v \
             -deffnm "$DEFFNM" -nsteps $NSTEPS \
             -nb gpu -pme gpu --plumed "$PLUMED"
     else
@@ -71,7 +71,7 @@ PLUMED="${DEFFNM}_plumed.dat"
     # ------------------ Center the protein ------------------
     if [[ -f ${DEFFNM}.xtc && -f ${DEFFNM}.tpr ]]; then
         printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
-        printf "1\n1\n" | gmx trjconv -s "${DEFFNM}.tpr" -f "${DEFFNM}.xtc" \
+        printf "1\n1\n" | gmx_mpi trjconv -s "${DEFFNM}.tpr" -f "${DEFFNM}.xtc" \
             -o "${DEFFNM}_center.xtc" -center -pbc mol
     else
         echo "Warning: Cannot center – missing ${DEFFNM}.xtc or ${DEFFNM}.tpr"

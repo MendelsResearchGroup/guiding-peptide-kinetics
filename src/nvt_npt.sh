@@ -21,7 +21,7 @@ done
     # Step 1: NVT grompp
     printf "${CYAN}\n---------- [Step 1: NVT grompp] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f nvt.tpr ]]; then
-        gmx grompp -f "../../nvt-charmm.mdp" -c em.gro -r em.gro -p topol.top -o nvt.tpr
+        gmx_mpi grompp -f "../../nvt-charmm.mdp" -c em.gro -r em.gro -p topol.top -o nvt.tpr
     else
         echo "nvt.tpr already exists. Skipping grompp for NVT."
     fi
@@ -29,7 +29,7 @@ done
     # Step 2: NVT mdrun
     printf "${YELLOW}\n---------- [Step 2: NVT mdrun] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f nvt.edr ]]; then
-        gmx mdrun -ntmpi 1 -ntomp 8 -v -deffnm nvt
+        gmx_mpi mdrun -ntmpi 1 -ntomp 8 -v -deffnm nvt
     else
         echo "nvt.edr already exists. Skipping mdrun for NVT."
     fi
@@ -37,7 +37,7 @@ done
     # Step 3: NPT grompp
     printf "${CYAN}\n---------- [Step 3: NPT grompp] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f npt.tpr ]]; then
-        gmx grompp -f "../../npt-charmm.mdp" -c nvt.gro -r nvt.gro -t nvt.cpt -p topol.top -o npt.tpr
+        gmx_mpi grompp -f "../../npt-charmm.mdp" -c nvt.gro -r nvt.gro -t nvt.cpt -p topol.top -o npt.tpr
     else
         echo "npt.tpr already exists. Skipping grompp for NPT."
     fi
@@ -45,16 +45,16 @@ done
     # Step 4: NPT mdrun
     printf "${YELLOW}\n---------- [Step 4: NPT mdrun] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f npt.edr ]]; then
-        gmx mdrun -ntmpi 1 -ntomp 8 -v -deffnm npt
+        gmx_mpi mdrun -ntmpi 1 -ntomp 8 -v -deffnm npt
     else
         echo "npt.edr already exists. Skipping mdrun for NPT."
     fi
 
     # Step 5: Extract thermodynamic properties
     printf "${CYAN}\n---------- [Step 5: Extract Properties] ----------${NC}\n"
-    echo "Temperature" | gmx energy -f nvt.edr -o temperature.xvg -xvg none -b 20
-    echo "Pressure" | gmx energy -f npt.edr -o pressure.xvg -xvg none
-    echo "Density" | gmx energy -f npt.edr -o density.xvg -xvg none
+    echo "Temperature" | gmx_mpi energy -f nvt.edr -o temperature.xvg -xvg none -b 20
+    echo "Pressure" | gmx_mpi energy -f npt.edr -o pressure.xvg -xvg none
+    echo "Density" | gmx_mpi energy -f npt.edr -o density.xvg -xvg none
 
     # Step 6: Plot
     printf "${YELLOW}\n---------- [Step 6: Plot Results] ----------${NC}\n"
