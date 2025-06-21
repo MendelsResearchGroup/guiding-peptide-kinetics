@@ -15,7 +15,7 @@ CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
 PLUMED_TEMPLATE="src/fpt_plumed.dat"
-NSTEPS=8000000
+NSTEPS=3000000
 
 # ------------------ parse args ------------------
 if [[ $# -lt 2 ]]; then
@@ -32,7 +32,7 @@ source "$(dirname "$0")/common/config.sh"
 FORCE=false && [[ ${3:-} =~ ^(-f|--force)$ ]] && FORCE=true
 
 DEFFNM="run_${RUN_ID}"
-RUN_DIR="${PROTEIN}/run_${RUN_ID}"
+RUN_DIR="run_${RUN_ID}"
 TPR="${DEFFNM}.tpr"
 PLUMED="${DEFFNM}_plumed.dat"
 
@@ -49,9 +49,9 @@ PLUMED="${DEFFNM}_plumed.dat"
     fi
 
     mkdir -p "$RUN_DIR"
-    cp "../$MDP" "$GRO" "$TOP" "$CPT" "$REF" "$RUN_DIR/"
+    cp "../../$MDP" "$GRO" "$TOP" "$CPT" "$REF" "$RUN_DIR/"
 
-    sed "s/__ID__/${RUN_ID}/g" "../../$PLUMED_TEMPLATE" >"$RUN_DIR/$PLUMED"
+    sed "s/__ID__/${RUN_ID}/g" "../../../$PLUMED_TEMPLATE" >"$RUN_DIR/$PLUMED"
 
     # ------------------ GROMACS run ------------------
     cd "$RUN_DIR"
@@ -66,6 +66,15 @@ PLUMED="${DEFFNM}_plumed.dat"
             -nb gpu -pme gpu --plumed "$PLUMED"
     else
         echo "${DEFFNM}.edr exists – skipping mdrun"
+    fi
+
+    # ------------------ Center the protein ------------------
+    if [[ -f ${DEFFNM}.xtc && -f ${DEFFNM}.tpr ]]; then
+        printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
+        printf "1\n1\n" | gmx trjconv -s "${DEFFNM}.tpr" -f "${DEFFNM}.xtc" \
+            -o "${DEFFNM}_center.xtc" -center -pbc mol
+    else
+        echo "Warning: Cannot center – missing ${DEFFNM}.xtc or ${DEFFNM}.tpr"
     fi
 
     printf "\n${CYAN}Replica $RUN_ID finished; outputs in $OUTPUT_DIR/$RUN_DIR/${NC}\n"

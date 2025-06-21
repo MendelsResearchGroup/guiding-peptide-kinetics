@@ -18,7 +18,7 @@ d12: DISTANCE ATOMS=112,140 NOPBC
 
 s_hlda: COMBINE ARG=d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12 COEFFICIENTS=0.2811,0.7997,0.5035,-0.0955,0.0693,0.0072,-0.0097,0.0033,0.0056,0.1003,0.0355,-0.09496 PERIODIC=NO
 
-stop_simulation: CUSTOM ARG=rmsd FUNC=step(x-0.15) PERIODIC=NO
+stop_simulation: CUSTOM ARG=rmsd FUNC=step(x-0.1001) PERIODIC=NO
 
 metad: METAD ARG=s_hlda ...
         PACE=50000 HEIGHT=2.82 BIASFACTOR=8 SIGMA=0.01 
@@ -27,5 +27,5 @@ metad: METAD ARG=s_hlda ...
 ...
 
 
-PRINT ARG=s_hlda,metad.bias,metad.acc,stop_simulation,rmsd FILE=HLDA_COLVAR___ID__ STRIDE=1000 
+PRINT ARG=s_hlda,metad.bias,metad.acc,stop_simulation,rmsd FILE=HLDA_COLVAR___ID__ STRIDE=100
 FLUSH STRIDE=10000

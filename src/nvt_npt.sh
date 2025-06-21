@@ -21,7 +21,7 @@ done
     # Step 1: NVT grompp
     printf "${CYAN}\n---------- [Step 1: NVT grompp] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f nvt.tpr ]]; then
-        gmx grompp -f "../nvt-charmm.mdp" -c em.gro -r em.gro -p topol.top -o nvt.tpr
+        gmx grompp -f "../../nvt-charmm.mdp" -c em.gro -r em.gro -p topol.top -o nvt.tpr
     else
         echo "nvt.tpr already exists. Skipping grompp for NVT."
     fi
@@ -37,7 +37,7 @@ done
     # Step 3: NPT grompp
     printf "${CYAN}\n---------- [Step 3: NPT grompp] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f npt.tpr ]]; then
-        gmx grompp -f "../npt-charmm.mdp" -c nvt.gro -r nvt.gro -t nvt.cpt -p topol.top -o npt.tpr
+        gmx grompp -f "../../npt-charmm.mdp" -c nvt.gro -r nvt.gro -t nvt.cpt -p topol.top -o npt.tpr
     else
         echo "npt.tpr already exists. Skipping grompp for NPT."
     fi
@@ -58,7 +58,7 @@ done
 
     # Step 6: Plot
     printf "${YELLOW}\n---------- [Step 6: Plot Results] ----------${NC}\n"
-    python3 ../../src/plot_property.py temperature.xvg temperature pressure.xvg pressure density.xvg density
+    python3 ../../../src/plots/property.py temperature.xvg temperature pressure.xvg pressure density.xvg density
 
     printf "\n${CYAN}✅ NVT and NPT simulations complete. Properties plotted.${NC}\n"
 )

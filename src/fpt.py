@@ -4,15 +4,15 @@ from pathlib import Path
 import pandas as pd
 from STiMetaD import STiMetaD as STM
 
-base_path = Path("./data/output/chignolin")
-max_runs = 20
+base_path = Path("./data/YYDPETGTWE/output")
+max_runs = 50
 
 colnames = ["time", "s_hlda", "metad.bias", "metad.acc", "stop_simulation", "rmsd"]
 
 results = []
 warnings = []
 
-for i in range(max_runs):
+for i in range(0, max_runs):
     index_str = f"{i:02}"
     run_path = base_path / f"run_0{index_str}" / f"HLDA_COLVAR_0{index_str}"
 
@@ -28,14 +28,20 @@ for i in range(max_runs):
         warnings.append(f"[{index_str}] Error reading {run_path}: {e}")
         continue
 
-    # print(df["rmsd"].max())
-    folded_row = df[df["rmsd"] > 0.101]
+    rmsd_threshold = 0.101
+    consecutive_count = 2
 
-    if folded_row.empty:
-        warnings.append(f"[{index_str}] No folding (stop_simulation==1.0) found.")
+    condition = df["rmsd"] > rmsd_threshold
+    rolling_hits = condition.rolling(consecutive_count).sum() == consecutive_count
+    indices = rolling_hits[rolling_hits].index
+
+    if indices.empty:
+        warnings.append(
+            f"[{index_str}] No {consecutive_count} consecutive frames with rmsd > {rmsd_threshold} found."
+        )
         continue
 
-    row = folded_row.iloc[0]
+    row = df.loc[indices[0]]
     time = row["time"]
     acc = row["metad.acc"]
     predicted = time * acc
@@ -46,8 +52,8 @@ for i in range(max_runs):
     )
 
 summary_df = pd.DataFrame(results)
-summary_df.to_csv("folding_summary.csv", index=False)
-print("✅ Done. Results saved to 'folding_summary.csv'.")
+# summary_df.to_csv("folding_summary.csv", index=False)
+# print("✅ Done. Results saved to 'folding_summary.csv'.")
 
 if warnings:
     print("\n` Warnings:")
@@ -58,14 +64,13 @@ estimator = STM(minSampleSize=5)
 
 if not summary_df.empty:
     samples = summary_df["predicted"].to_numpy()
-
-    mfpt = estimator.estimateMFPT(samples=samples) / 1e6  # convert to µs
-    rate = estimator.estimateRate(samples=samples) * 1e6  # convert from 1/ps to 1/µs
+    mfpt = estimator.estimateMFPT(samples=samples) / 1e6
+    rate = estimator.estimateRate(samples=samples) * 1e6
     tstar = estimator.estimateTstar(samples=samples) / 1e6
 
     print("ST-iMetaD Estimates:")
-    print(f"  MFPT  ≈ {mfpt} µs")
-    print(f"  k     ≈ {rate} 1/µs")
-    print(f"  t*    ≈ {tstar} µs")
+    print(f"  MFPT  ≈ {mfpt:.6f} μs")
+    print(f"  k     ≈ {rate:.6f} 1/μs")
+    print(f"  t*    ≈ {tstar:.6f} s")
 else:
     print("\n No folding samples collected. Cannot estimate kinetics.")
