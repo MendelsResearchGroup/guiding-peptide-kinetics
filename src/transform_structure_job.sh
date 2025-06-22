@@ -20,12 +20,12 @@ CYAN='\033[1;36m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-if [ -z "$1" ]; then
+if [ -z "$BASE" ]; then
     echo -e "${YELLOW}Usage: $0 <base_filename>${NC}"
     exit 1
 fi
 
-BASE=$1
+BASE=$BASE
 source "$(dirname "$0")/common/config.sh"
 
 PDB_INPUT="$INPUT_DIR/${BASE}.pdb"

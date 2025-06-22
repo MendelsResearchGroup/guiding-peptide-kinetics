@@ -15,7 +15,7 @@ export OMP_NUM_THREADS=16
 # Usage: ./run_nvt_npt.sh <base_filename> [-f|--force]
 # Example: ./run_nvt_npt.sh 1fjs --force
 
-BASE=$1
+BASE=$BASE
 
 source "$(dirname "$0")/common/config.sh"
 
