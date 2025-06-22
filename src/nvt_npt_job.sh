@@ -5,19 +5,21 @@
 #PBS -l select=2:ncpus=16:mpiprocs=2
 #PBS  -M  alexander.z@technion.ac.il
 
-PBS_O_WORKDIR=$HOME/work
+PBS_O_WORKDIR=$HOME/work/protein-toolkit
 
 source ~/.bashrc
 conda activate gromacs_plumed
 
 export OMP_NUM_THREADS=16
 
+cd $PBS_O_WORKDIR
+
 # Usage: ./run_nvt_npt.sh <base_filename> [-f|--force]
 # Example: ./run_nvt_npt.sh 1fjs --force
 
 BASE=$BASE
 
-source "$(dirname "$0")/common/config.sh"
+source "$PBS_O_WORKDIR/common/config.sh"
 
 FORCE=false
 

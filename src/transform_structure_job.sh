@@ -5,7 +5,7 @@
 #PBS -l select=2:ncpus=16:mpiprocs=2
 #PBS  -M  alexander.z@technion.ac.il
 
-PBS_O_WORKDIR=$HOME/work
+PBS_O_WORKDIR=$HOME/work/protein-toolkit
 
 source ~/.bashrc
 conda activate gromacs_plumed
@@ -26,7 +26,7 @@ if [ -z "$BASE" ]; then
 fi
 
 BASE=$BASE
-source "$(dirname "$0")/common/config.sh"
+source "/common/config.sh"
 
 PDB_INPUT="$INPUT_DIR/${BASE}.pdb"
 
