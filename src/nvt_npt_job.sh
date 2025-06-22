@@ -8,7 +8,7 @@
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
 
 source ~/.bashrc
-conda activate gromacs_plumed
+conda activate gmx-plumed
 
 export OMP_NUM_THREADS=16
 
@@ -30,7 +30,11 @@ for arg in "$@"; do
 done
 
 (
-    cd "$OUTPUT_DIR" || exit
+    cd "$PBS_O_WORKDIR/$OUTPUT_DIR" || exit
+
+    
+    echo "Checking GROMACS version on HPC:"
+    gmx_mpi --version
 
     # Step 1: NVT grompp
     printf "${CYAN}\n---------- [Step 1: NVT grompp] ----------${NC}\n"
@@ -43,7 +47,7 @@ done
     # Step 2: NVT mdrun
     printf "${YELLOW}\n---------- [Step 2: NVT mdrun] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f nvt.edr ]]; then
-        gmx_mpi mdrun -ntmpi 1 -ntomp 8 -v -deffnm nvt
+        gmx_mpi mdrun -v -deffnm nvt
     else
         echo "nvt.edr already exists. Skipping mdrun for NVT."
     fi
@@ -59,7 +63,7 @@ done
     # Step 4: NPT mdrun
     printf "${YELLOW}\n---------- [Step 4: NPT mdrun] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f npt.edr ]]; then
-        gmx_mpi mdrun -ntmpi 1 -ntomp 8 -v -deffnm npt
+        gmx_mpi mdrun -v -deffnm npt
     else
         echo "npt.edr already exists. Skipping mdrun for NPT."
     fi

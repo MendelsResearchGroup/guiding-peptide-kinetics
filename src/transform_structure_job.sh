@@ -48,6 +48,7 @@ printf "${YELLOW}\n---------- [Step 4: GROMACS Processing] ----------${NC}\n"
 (
     cd "$OUTPUT_DIR"
 
+
     printf "${CYAN}Generating topology and structure${NC}\n"
     gmx_mpi pdb2gmx -f "${BASE}_protein.pdb" -o "${BASE}_processed.gro" -water tip3p -ff charmm22star -ignh
 
@@ -68,7 +69,7 @@ printf "${YELLOW}\n---------- [Step 4: GROMACS Processing] ----------${NC}\n"
 
     printf "${YELLOW}Running energy minimization${NC}\n"
     gmx_mpi grompp -f "../../emin-charmm.mdp" -c "${BASE}_solv_ions.gro" -p topol.top -o em.tpr
-    gmx_mpi mdrun -v -deffnm em -ntmpi 1 -ntomp 1
+    gmx_mpi mdrun -v -deffnm em 
 
     # Extract potential energy
     printf "${CYAN}Extracting potential energy${NC}\n"

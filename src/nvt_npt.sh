@@ -18,6 +18,7 @@ done
 (
     cd "$OUTPUT_DIR" || exit
 
+
     # Step 1: NVT grompp
     printf "${CYAN}\n---------- [Step 1: NVT grompp] ----------${NC}\n"
     if [[ "$FORCE" == true || ! -f nvt.tpr ]]; then
