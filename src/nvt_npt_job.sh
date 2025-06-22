@@ -19,7 +19,7 @@ cd $PBS_O_WORKDIR
 
 BASE=$BASE
 
-source "$PBS_O_WORKDIR/common/config.sh"
+source "$PBS_O_WORKDIR/src/common/config.sh"
 
 FORCE=false
 

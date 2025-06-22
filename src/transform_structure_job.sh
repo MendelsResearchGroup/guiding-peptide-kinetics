@@ -26,7 +26,7 @@ if [ -z "$BASE" ]; then
 fi
 
 BASE=$BASE
-source "/common/config.sh"
+source "$PBS_O_WORKDIR/src/common/config.sh"
 
 PDB_INPUT="$INPUT_DIR/${BASE}.pdb"
 
