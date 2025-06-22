@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N gmx_test
+#PBS -N fpt_run
 #PBS -q  mendels_q
 #PBS -o output.log
 #PBS -l select=2:ncpus=16:mpiprocs=2
@@ -52,7 +52,7 @@ PLUMED="${DEFFNM}_plumed.dat"
     fi
 
     mkdir -p "$RUN_DIR"
-    cp "../../$MDP" "$GRO" "$TOP" "$CPT" "$REF" "$RUN_DIR/"
+    cp "../../$MDP" "$GRO" "$TOP" "$CPT" "../$REF" "$RUN_DIR/"
 
     sed "s/__ID__/${RUN_ID}/g" "../../../$PLUMED_TEMPLATE" >"$RUN_DIR/$PLUMED"
 
@@ -64,9 +64,7 @@ PLUMED="${DEFFNM}_plumed.dat"
 
     printf "\n${YELLOW}>> [mdrun] Starting MD with HLDA bias${NC}\n"
     if [[ "$FORCE" == true || ! -f ${DEFFNM}.edr ]]; then
-        gmx_mpi mdrun -ntmpi 1 -ntomp 6 -v \
-            -deffnm "$DEFFNM" -nsteps $NSTEPS \
-            -nb gpu -pme gpu --plumed "$PLUMED"
+        gmx_mpi mdrun -deffnm "$DEFFNM" -nsteps $NSTEPS --plumed "$PLUMED"
     else
         echo "${DEFFNM}.edr exists – skipping mdrun"
     fi
