@@ -5,9 +5,9 @@ import pandas as pd
 from STiMetaD import STiMetaD as STM
 
 base_path = Path("./data/chignolin/output")
-max_runs = 50
+max_runs = 90
 
-colnames = ["time", "s_hlda", "metad.bias", "metad.acc", "stop_simulation", "rmsd"]
+colnames = ["time", "hlda", "metad.bias", "metad.acc", "stop_simulation", "rmsd"]
 
 results = []
 warnings = []
@@ -28,8 +28,8 @@ for i in range(0, max_runs):
         warnings.append(f"[{index_str}] Error reading {run_path}: {e}")
         continue
 
-    rmsd_threshold = 0.15
-    consecutive_count = 2
+    rmsd_threshold = 0.1
+    consecutive_count = 3
 
     condition = df["rmsd"] > rmsd_threshold
     rolling_hits = condition.rolling(consecutive_count).sum() == consecutive_count
@@ -52,6 +52,7 @@ for i in range(0, max_runs):
     )
 
 summary_df = pd.DataFrame(results)
+print(summary_df)
 # summary_df.to_csv("folding_summary.csv", index=False)
 # print("✅ Done. Results saved to 'folding_summary.csv'.")
 
@@ -63,7 +64,7 @@ if warnings:
 estimator = STM(minSampleSize=5)
 
 if not summary_df.empty:
-    samples = summary_df["predicted"].to_numpy()
+    samples = summary_df["predicted"].to_numpy() * 500
     mfpt = estimator.estimateMFPT(samples=samples) / 1e6
     rate = estimator.estimateRate(samples=samples) * 1e6
     tstar = estimator.estimateTstar(samples=samples) / 1e6
@@ -71,6 +72,6 @@ if not summary_df.empty:
     print("ST-iMetaD Estimates:")
     print(f"  MFPT  ≈ {mfpt:.6f} μs")
     print(f"  k     ≈ {rate:.6f} 1/μs")
-    print(f"  t*    ≈ {tstar:.6f} s")
+    print(f"  t*    ≈ {tstar:.6f} μs")
 else:
     print("\n No folding samples collected. Cannot estimate kinetics.")
