@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from STiMetaD import STiMetaD as STM
 
-base_path = Path("./data/YYDPETGTWE/output")
+base_path = Path("./data/chignolin/output")
 max_runs = 50
 
 colnames = ["time", "s_hlda", "metad.bias", "metad.acc", "stop_simulation", "rmsd"]
@@ -28,7 +28,7 @@ for i in range(0, max_runs):
         warnings.append(f"[{index_str}] Error reading {run_path}: {e}")
         continue
 
-    rmsd_threshold = 0.101
+    rmsd_threshold = 0.15
     consecutive_count = 2
 
     condition = df["rmsd"] > rmsd_threshold

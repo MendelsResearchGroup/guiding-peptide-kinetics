@@ -1,8 +1,8 @@
 # vim:ft=plumed
 # add a restraint to strech the protein into unfolded state
-MOLINFO STRUCTURE=reference.pdb MOLTYPE=protein
+MOLINFO STRUCTURE=../reference.pdb MOLTYPE=protein
 WHOLEMOLECULES RESIDUES=all MOLTYPE=protein
-rmsd: RMSD REFERENCE=reference.pdb TYPE=OPTIMAL NOPBC
+rmsd: RMSD REFERENCE=../reference.pdb TYPE=OPTIMAL NOPBC
 e2e: DISTANCE ATOMS=@N-0,@C-9 NOPBC
 res: RESTRAINT ARG=e2e KAPPA=100 AT=2.5
 PRINT ARG=e2e,rmsd,res.bias FILE=COLVAR_STRETCH STRIDE=100

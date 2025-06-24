@@ -13,7 +13,7 @@ pbc                     = xyz       ;
 continuation            = yes      
 
 ; Pressure coupling is on
-pcoupl                  = C-rescale             ; Pressure coupling on in NPT
+pcoupl                  = Parrinello-Rahman             ; Pressure coupling on in NPT
 pcoupltype              = isotropic             ; uniform scaling of box vectors
 tau_p                   = 5.0                   ; time constant, in ps
 ref_p                   = 1.0                   ; reference pressure, in bar

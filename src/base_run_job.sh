@@ -2,7 +2,7 @@
 #PBS -N base_run
 #PBS -q  mendels_q
 #PBS -o output.log
-#PBS -l select=2:ncpus=8:mpiprocs=2
+#PBS -l select=2:ncpus=16:mpiprocs=2
 #PBS  -M  alexander.z@technion.ac.il
 
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
@@ -15,12 +15,12 @@ export OMP_NUM_THREADS=16
 cd $PBS_O_WORKDIR
 
 set -e
+set -x 
 
-# Example: ./prod_run.sh chignolin [--force]
 BASE=$BASE
 
 source "$PBS_O_WORKDIR/src/common/config.sh"
-FORCE=false
+FORCE=true
 
 for arg in "$@"; do
   if [[ "$arg" == "--force" || "$arg" == "-f" ]]; then
@@ -28,11 +28,11 @@ for arg in "$@"; do
   fi
 done
 
-printf "${CYAN}===============================================\n"
+printf "===============================================\n"
 echo "Starting GROMACS Simulation Script"
 echo "Output Directory: $OUTPUT_DIR"
 echo "Force Run: $FORCE"
-printf "===============================================${NC}\n"
+printf "===============================================\n"
 
 (
   cd "$OUTPUT_DIR" || {
@@ -40,14 +40,14 @@ printf "===============================================${NC}\n"
     exit 1
   }
 
-  printf "\n${CYAN}---------- [Preparation] ----------${NC}\n"
+  printf "\n---------- [Preparation] ----------\n"
   gmx_mpi grompp -f ../../md-charmm.mdp -c npt.gro -t npt.cpt -p topol.top -o md.tpr
 
-  printf "\n${YELLOW}---------- [MD Simulation] ----------${NC}\n"
+  printf "\n$---------- [MD Simulation] ----------\n"
   if [[ "$FORCE" == true || ! -f md.edr ]]; then
     echo "Running MD Simulation with mdrun..."
-    gmx_mpi mdrun -pin on -deffnm md -nsteps 200000 -plumed ../../../src/plumed/plumed.dat
-    cp COLVAR COLVAR_PIN
+    gmx_mpi mdrun -pin on -deffnm md -nsteps 20000000 -plumed ../../../src/plumed/base.dat
+    mv COLVAR COLVAR_PIN
   else
     echo "MD output (md.edr) already exists. Skipping mdrun."
   fi

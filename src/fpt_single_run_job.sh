@@ -2,7 +2,7 @@
 #PBS -N fpt_run
 #PBS -q  mendels_q
 #PBS -o output.log
-#PBS -l select=2:ncpus=16:mpiprocs=2
+#PBS -l select=2:ncpus=8:mpiprocs=2
 #PBS  -M  alexander.z@technion.ac.il
 
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
@@ -23,7 +23,7 @@ CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
 PLUMED_TEMPLATE="src/fpt_plumed.dat"
-NSTEPS=300000
+NSTEPS=3000000
 
 RUN_ID=$(printf "%03d" "$ID")
 PROTEIN="$BASE"
