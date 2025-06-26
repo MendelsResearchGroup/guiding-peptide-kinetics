@@ -2,63 +2,91 @@
 """
 Compute the HLDA collective variable from two COLVAR files and print:
 
-  • The weight vector W (one weight per d1…d12 descriptor)
+  • The weight vector W (one weight per descriptor dXX)
   • The first few s_HLDA values for the folded and unfolded sets
-  • A quick overlap histogram (shown on screen, not saved)
-
-Files:
-  COLVAR_PIN   - trajectory trapped in the folded basin
-  COLVAR_FLAT  - trajectory trapped in the unfolded basin
+  • A convergence plot of HLDA vector as more data is used
 """
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from numpy.typing import NDArray
+from pathlib import Path
 
-folded_path = "data/output/COLVAR_PIN"
-unfolded_path = "data/output/COLVAR_FLAT"
+folded_path = Path("data/YYDPETGTWE/output/COLVAR_PIN")
+unfolded_path = Path("data/YYDPETGTWE/output/COLVAR_FLAT")
 
-descriptor_cols = [f"d{i}" for i in range(1, 13)]
-all_cols = ["time", "rmsd", "e2e", "rg"] + descriptor_cols
-ridge = 1e-6
+def load_descriptors(path: Path, omit: list[str] = []) -> tuple[NDArray[np.float64], list[str]]:
+    with path.open() as f:
+        header_line = next(line for line in f if line.lstrip().startswith("#!"))
+        header = header_line.replace("#!", "").strip().split()
+    
+    df = pd.read_csv(path, comment="#", delim_whitespace=True, names=header, skiprows=1)
+    descriptor_cols = [col for col in header if col.startswith("d") and col not in omit]
+    
+    print(f"{path.name}: using descriptors {descriptor_cols}")
+    return df[descriptor_cols].astype(float).to_numpy(), descriptor_cols
 
 
-def load_descriptors(path) -> NDArray[np.float64]:
-    df = pd.read_csv(
-        path, comment="#", sep=r"\s+", names=descriptor_cols, engine="python"
-    )
-    return df[descriptor_cols].astype(float).to_numpy()
-
-
-A = load_descriptors(folded_path)
-B = load_descriptors(unfolded_path)
-
+OMIT_DESCRIPTORS = ["d06", "d07", "d08", "d09", "d15", "d16", "d17", "d18", "d19", "d28"]
+A, desc_cols_A = load_descriptors(folded_path)
+B, desc_cols_B = load_descriptors(unfolded_path)
 
 mu_A, mu_B = A.mean(0), B.mean(0)
 Sigma_A = np.cov(A, rowvar=False)
 Sigma_B = np.cov(B, rowvar=False)
-
-# HLDA weight vector (Eq. 6)
-inv_Sigma_A = np.linalg.inv(Sigma_A + ridge * np.eye(Sigma_A.shape[0]))
-inv_Sigma_B = np.linalg.inv(Sigma_B + ridge * np.eye(Sigma_B.shape[0]))
+inv_Sigma_A = np.linalg.inv(Sigma_A)
+inv_Sigma_B = np.linalg.inv(Sigma_B)
 W = (inv_Sigma_A + inv_Sigma_B) @ (mu_A - mu_B)
-
 W /= np.linalg.norm(W)
-
-# Project every frame → scalar HLDA CV
-s_folded = A @ W
-s_unfolded = B @ W
+W_final = W.copy()
 
 print("\nHLDA weights:")
-for i, w in enumerate(W, 1):
-    print(f"  W_{i} = {w:+.4f}")
+for name, w in zip(desc_cols_A, W):
+    print(f"  {name}: {w:+.4f}")
+
+s_folded = A @ W
+s_unfolded = B @ W
 print("\ns_HLDA (folded):   ", s_folded[:10])
 print("\ns_HLDA (unfolded): ", s_unfolded[:10])
 
+Npoints = 20
+step_size = min(len(A), len(B)) // Npoints
+similarities = []
 
-# plt.figure(figsize=(6, 4))
-# plt.hist(s_folded, bins=50, density=True, alpha=0.5, label="folded")
-# plt.hist(s_unfolded, bins=50, density=True, alpha=0.5, label="unfolded")
-# plt.xlabel("s_HLDA"); plt.ylabel("probability density"); plt.legend()
-# plt.tight_layout()
-# plt.show()
+weights_over_time = []
+x = [j * step_size for j in range(1, Npoints + 1)]
+
+for j in range(1, Npoints + 1):
+    A_sub = A[:j * step_size]
+    B_sub = B[:j * step_size]
+
+    mu_Aj = A_sub.mean(0)
+    mu_Bj = B_sub.mean(0)
+    Sigma_Aj = np.cov(A_sub, rowvar=False)
+    Sigma_Bj = np.cov(B_sub, rowvar=False)
+
+    inv_Sigma_Aj = np.linalg.inv(Sigma_Aj)
+    inv_Sigma_Bj = np.linalg.inv(Sigma_Bj)
+    Wj = (inv_Sigma_Aj + inv_Sigma_Bj) @ (mu_Aj - mu_Bj)
+    Wj /= np.linalg.norm(Wj)
+
+    weights_over_time.append(Wj)
+    cos_sim = np.dot(Wj, W_final)
+    similarities.append(cos_sim)
+
+weights_over_time = np.array(weights_over_time)
+for i, name in enumerate(desc_cols_A):
+    plt.plot(x, weights_over_time[:, i], label=name)
+
+plt.savefig("figures/hlda_convergence_weights.png")
+plt.clf()
+
+
+plt.plot(x, similarities, marker='o')
+plt.xlabel("Frames used per class")
+plt.ylabel("Cosine similarity")
+plt.title("HLDA vector convergence")
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("figures/hlda_convergence_cosine.png")

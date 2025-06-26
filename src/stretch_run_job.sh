@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N base_run
+#PBS -N stretch_run
 #PBS -q  mendels_q
 #PBS -o output.log
 #PBS -l select=2:ncpus=8:mpiprocs=2
@@ -40,6 +40,6 @@ BASE=$1
     mv COLVAR COLVAR_FLAT
 
     # printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
-    printf "1\n1\n" | gmx trjconv -s md.tpr -f md.xtc -o md_center.xtc -center -pbc mol
+    printf "1\n1\n" | gmx_mpi trjconv -s md.tpr -f md.xtc -o md_center.xtc -center -pbc mol
 
 )

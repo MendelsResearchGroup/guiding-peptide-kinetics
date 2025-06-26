@@ -23,7 +23,7 @@ CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
 PLUMED_TEMPLATE="src/fpt_plumed.dat"
-NSTEPS=3000000
+NSTEPS=10000000
 
 RUN_ID=$(printf "%03d" "$ID")
 PROTEIN="$BASE"

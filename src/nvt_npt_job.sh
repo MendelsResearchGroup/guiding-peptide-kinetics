@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N gmx_test
+#PBS -N nvt_npt
 #PBS -q  mendels_q
 #PBS -o output.log
 #PBS -l select=2:ncpus=16:mpiprocs=2

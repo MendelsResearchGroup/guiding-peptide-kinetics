@@ -1,20 +1,22 @@
 import pandas as pd
 from pathlib import Path
-
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from STiMetaD import STiMetaD as STM
 
 base_path = Path("./data/chignolin/output")
-max_runs = 90
-
 colnames = ["time", "hlda", "metad.bias", "metad.acc", "stop_simulation", "rmsd"]
 
 results = []
 warnings = []
 
-for i in range(0, max_runs):
-    index_str = f"{i:02}"
-    run_path = base_path / f"run_0{index_str}" / f"HLDA_COLVAR_0{index_str}"
+rmsd_threshold = 0.1
+consecutive_count = 5
+    
+for i in range(0, 100):
+    index_str = f"{i:03}"
+    run_path = base_path / f"run_{index_str}" / f"HLDA_COLVAR_{index_str}"
 
     if not run_path.exists():
         warnings.append(f"[{index_str}] File not found: {run_path}")
@@ -28,27 +30,34 @@ for i in range(0, max_runs):
         warnings.append(f"[{index_str}] Error reading {run_path}: {e}")
         continue
 
-    rmsd_threshold = 0.1
-    consecutive_count = 3
-
     condition = df["rmsd"] > rmsd_threshold
-    rolling_hits = condition.rolling(consecutive_count).sum() == consecutive_count
-    indices = rolling_hits[rolling_hits].index
+    streak = 0
+    start_index = None
 
-    if indices.empty:
+    for idx, val in enumerate(condition):
+        if val:
+            streak += 1
+            if streak == consecutive_count:
+                start_index = idx - consecutive_count + 1
+                break
+        else:
+            streak = 0
+
+    if start_index is None:
         warnings.append(
-            f"[{index_str}] No {consecutive_count} consecutive frames with rmsd > {rmsd_threshold} found."
+            f"[{index_str}] No {consecutive_count}  consecutive frames with rmsd > {rmsd_threshold} found."
         )
         continue
 
-    row = df.loc[indices[0]]
+    row = df.iloc[start_index]
+
     time = row["time"]
     acc = row["metad.acc"]
     predicted = time * acc
     rmsd = row["rmsd"]
 
     results.append(
-        {"id": i, "time": time, "acc": acc, "predicted": predicted, "rmsd": rmsd}
+        {"time": time, "acc": acc, "predicted": predicted, "rmsd": rmsd}
     )
 
 summary_df = pd.DataFrame(results)
@@ -61,10 +70,17 @@ if warnings:
     for w in warnings:
         print(" -", w)
 
-estimator = STM(minSampleSize=5)
+estimator = STM(minSampleSize=10)
 
 if not summary_df.empty:
     samples = summary_df["predicted"].to_numpy() * 500
+    
+    predicted_time = summary_df["predicted"].to_numpy()
+    predicted_time = predicted_time[(predicted_time < 1e6) & (predicted_time > 1000)]
+    print(f"mu/sig = {np.mean(predicted_time) / np.std(predicted_time):.4f}")
+    plt.hist(predicted_time, bins=30)
+    plt.savefig("figures/histogram.png")
+    
     mfpt = estimator.estimateMFPT(samples=samples) / 1e6
     rate = estimator.estimateRate(samples=samples) * 1e6
     tstar = estimator.estimateTstar(samples=samples) / 1e6

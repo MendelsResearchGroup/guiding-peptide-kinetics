@@ -31,7 +31,7 @@ printf "===============================================${NC}\n"
   printf "\n${YELLOW}---------- [MD Simulation] ----------${NC}\n"
   if [[ "$FORCE" == true || ! -f md.edr ]]; then
     echo "Running MD Simulation with mdrun..."
-    gmx mdrun -ntmpi 1 -ntomp 12 -pin on -v -deffnm md -nb gpu -pme gpu -nsteps 50000000 -plumed ../../../src/plumed/plumed.dat
+    gmx mdrun -ntmpi 1 -ntomp 12 -pin on -v -deffnm md -nb gpu -pme gpu -nsteps 50000000 -plumed ../../../src/plumed/d.dat
     cp COLVAR COLVAR_PIN
   else
     echo "MD output (md.edr) already exists. Skipping mdrun."

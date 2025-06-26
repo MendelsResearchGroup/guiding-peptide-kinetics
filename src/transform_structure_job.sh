@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N gmx_test
+#PBS -N transform_structure
 #PBS -q  mendels_q
 #PBS -o output.log
 #PBS -l select=2:ncpus=16:mpiprocs=2
@@ -8,7 +8,7 @@
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
 
 source ~/.bashrc
-conda activate gromacs_plumed
+conda activate gmx-plumed
 
 export OMP_NUM_THREADS=16
 
