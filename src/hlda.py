@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 from numpy.typing import NDArray
 from pathlib import Path
 
-folded_path = Path("data/YYDPETGTWE/output/COLVAR_PIN")
-unfolded_path = Path("data/YYDPETGTWE/output/COLVAR_FLAT")
+folded_path = Path("data/chignolin/output/COLVAR_PIN")
+unfolded_path = Path("data/chignolin/output/COLVAR_FLAT")
 
-def load_descriptors(path: Path, omit: list[str] = []) -> tuple[NDArray[np.float64], list[str]]:
+def load_descriptors(path: Path, omit: list[str] = []):
     with path.open() as f:
         header_line = next(line for line in f if line.lstrip().startswith("#!"))
         header = header_line.replace("#!", "").strip().split()
@@ -27,10 +27,9 @@ def load_descriptors(path: Path, omit: list[str] = []) -> tuple[NDArray[np.float
     print(f"{path.name}: using descriptors {descriptor_cols}")
     return df[descriptor_cols].astype(float).to_numpy(), descriptor_cols
 
-
-OMIT_DESCRIPTORS = ["d06", "d07", "d08", "d09", "d15", "d16", "d17", "d18", "d19", "d28"]
-A, desc_cols_A = load_descriptors(folded_path)
-B, desc_cols_B = load_descriptors(unfolded_path)
+omit_descriptors = ["d07", "d08", "d09", "d09", "d15", "d16", "d17", "d18", "d19", "d27"]
+A, desc_cols_A = load_descriptors(folded_path, omit_descriptors)
+B, desc_cols_B = load_descriptors(unfolded_path, omit_descriptors)
 
 mu_A, mu_B = A.mean(0), B.mean(0)
 Sigma_A = np.cov(A, rowvar=False)
@@ -79,6 +78,7 @@ weights_over_time = np.array(weights_over_time)
 for i, name in enumerate(desc_cols_A):
     plt.plot(x, weights_over_time[:, i], label=name)
 
+plt.legend()
 plt.savefig("figures/hlda_convergence_weights.png")
 plt.clf()
 

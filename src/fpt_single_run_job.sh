@@ -2,7 +2,7 @@
 #PBS -N fpt_run
 #PBS -q  mendels_q
 #PBS -o output.log
-#PBS -l select=2:ncpus=8:mpiprocs=2
+#PBS -l select=1:ncpus=8:mpiprocs=8:host=n153
 #PBS  -M  alexander.z@technion.ac.il
 
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
@@ -15,6 +15,7 @@ export OMP_NUM_THREADS=16
 cd $PBS_O_WORKDIR
 
 set -euo pipefail
+PROTEIN="$BASE"
 
 # ------------------ constants ------------------
 MDP="md-charmm.mdp"
@@ -22,11 +23,10 @@ GRO="npt.gro"
 CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
-PLUMED_TEMPLATE="src/fpt_plumed.dat"
+PLUMED_TEMPLATE="src/fpt_plumed_$PROTEIN.dat"
 NSTEPS=10000000
 
 RUN_ID=$(printf "%03d" "$ID")
-PROTEIN="$BASE"
 BASE="$PROTEIN"
 
 source "$PBS_O_WORKDIR/src/common/config.sh"
