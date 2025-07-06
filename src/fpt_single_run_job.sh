@@ -2,7 +2,7 @@
 #PBS -N fpt_run
 #PBS -q  mendels_q
 #PBS -o output.log
-#PBS -l select=1:ncpus=8:mpiprocs=8:host=n153
+#PBS -l select=1:ncpus=4:mpiprocs=4:host=n152
 #PBS  -M  alexander.z@technion.ac.il
 
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
@@ -10,7 +10,6 @@ PBS_O_WORKDIR=$HOME/work/protein-toolkit
 source ~/.bashrc
 conda activate gmx-plumed
 
-export OMP_NUM_THREADS=16
 
 cd $PBS_O_WORKDIR
 
@@ -24,7 +23,7 @@ CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
 PLUMED_TEMPLATE="src/fpt_plumed_$PROTEIN.dat"
-NSTEPS=10000000
+NSTEPS=200000000
 
 RUN_ID=$(printf "%03d" "$ID")
 BASE="$PROTEIN"

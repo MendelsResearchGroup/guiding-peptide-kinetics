@@ -2,7 +2,7 @@
 #PBS -N transform_structure
 #PBS -q  mendels_q
 #PBS -o output.log
-#PBS -l select=2:ncpus=16:mpiprocs=2
+#PBS -l select=2:ncpus=2:mpiprocs=2
 #PBS  -M  alexander.z@technion.ac.il
 
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
