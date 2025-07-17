@@ -1,8 +1,8 @@
 #!/bin/bash
 #PBS -N fpt_run
-#PBS -q  mendels_q
+#PBS -q  mendels_comb_q
 #PBS -o output.log
-#PBS -l select=1:ncpus=4:mpiprocs=4:host=n152
+#PBS -l select=1:ncpus=4:mpiprocs=4
 #PBS  -M  alexander.z@technion.ac.il
 
 PBS_O_WORKDIR=$HOME/work/protein-toolkit
