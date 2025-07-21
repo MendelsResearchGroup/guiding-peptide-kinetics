@@ -10,7 +10,6 @@ PBS_O_WORKDIR=$HOME/work/protein-toolkit
 source ~/.bashrc
 conda activate gmx-plumed
 
-export OMP_NUM_THREADS=16
 
 cd $PBS_O_WORKDIR
 

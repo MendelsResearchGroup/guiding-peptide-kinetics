@@ -1,4 +1,4 @@
-data/output/
+data/*/output/
 figures/
 
 # Byte-compiled / optimized / DLL files
