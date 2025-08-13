@@ -34,21 +34,23 @@ class STiMetaD:
             [(len(samples) - i) / len(samples) for i in range(len(samples))]
         )
         predictions = []
-        R2s = []
-
+        R2s: list[Unknown] = []
+        limits: int = []
         for limit in range(minSampleSize, len(samples)):
-            k = -sum(samples[:limit] * np.log(survival[:limit])) / sum(
-                samples[:limit] ** 2
+            firstSamples = samples[:limit]
+            k = -sum(firstSamples* np.log(survival[:limit])) / sum(
+                sfirstSamples ** 2
             )
             predictions.append(k)
             R2s.append(
                 1
-                - sum((np.log(survival[:limit]) + k * samples[:limit]) ** 2)
+                - sum((np.log(survival[:limit]) + k * firstSamples) ** 2)
                 / sum((np.log(survival[:limit]) - np.log(survival[:limit]).mean()) ** 2)
             )
+            limits.append(limit)
 
         return pd.DataFrame(
-            {"Tstar": samples[minSampleSize:], "prediction": predictions, "R2": R2s}
+            {"Tstar": samples[minSampleSize:], "prediction": predictions, "R2": R2s, "limit": limits}
         )
 
     def estimateMFPT(self, samples, minSampleSize=None):
@@ -63,7 +65,10 @@ class STiMetaD:
         data = self.obtainEstimationsDataFrame(
             samples=samples, minSampleSize=minSampleSize
         )
-        return float(1 / data.loc[data.R2 == data.R2.max()].prediction)
+        max = data.loc[data.R2 == data.R2.max()
+        limit = max.limit
+
+        return (float(1 / max.prediction), limit)
 
     def estimateRate(self, samples, minSampleSize=None):
         """
