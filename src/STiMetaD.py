@@ -39,7 +39,7 @@ class STiMetaD:
         for limit in range(minSampleSize, len(samples)):
             firstSamples = samples[:limit]
             k = -sum(firstSamples* np.log(survival[:limit])) / sum(
-                sfirstSamples ** 2
+                firstSamples ** 2
             )
             predictions.append(k)
             R2s.append(
@@ -65,7 +65,7 @@ class STiMetaD:
         data = self.obtainEstimationsDataFrame(
             samples=samples, minSampleSize=minSampleSize
         )
-        max = data.loc[data.R2 == data.R2.max()
+        max = data.loc[data.R2 == data.R2.max()]
         limit = max.limit
 
         return (float(1 / max.prediction), limit)
