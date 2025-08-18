@@ -13,3 +13,4 @@ dependencies:
   - ipywidgets 
   - matplotlib
   - ruff
+  - scipy
