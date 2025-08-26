@@ -53,4 +53,4 @@ proteins = [
     "YYDPETGRWY",
 ]
 
-thresholds = np.arange(0.2, 0.50, 0.04)
+thresholds = np.arange(0.1, 0.50, 0.04)
