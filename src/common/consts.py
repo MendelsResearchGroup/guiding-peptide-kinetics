@@ -19,7 +19,7 @@ mutation_map = {
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
-    "chignolin": "Wildtype",
+    "chignolin": "WT",
 }
 
 
@@ -52,8 +52,9 @@ proteins = [
     "YYDPETGYWY",
     "YYDPETGTWV",
     "YYDPETGRWY",
-    # "YYDPETGTWA",
-    # "YYDPETGGWY"
+    "YYDPETGTWA",
+    "YYDPETGGWY",
+    "YYMPETGTWY"
 ]
 
-thresholds = np.arange(0.2, 0.50 + 1e-9, 0.04)
+thresholds = np.arange(0.15, 0.50 + 1e-9, 0.04)
