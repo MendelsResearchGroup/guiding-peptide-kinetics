@@ -58,3 +58,8 @@ proteins = [
 ]
 
 thresholds = np.arange(0.15, 0.50 + 1e-9, 0.04)
+res_colors = {
+    2: "orange",
+    7: "blue",
+    9: "green"
+}
