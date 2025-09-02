@@ -19,20 +19,22 @@ mutation_map = {
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
+    "YYDPETGDWY": "T7D",
     "chignolin": "WT",
+    
 }
 
 
 groupByResidue = {
     2: ["D2A", "D2C", "D2M", "D2N", "D2R", "D2E"],
-    7: ["T7V", "T7Q", "T7R", "T7Y", 'T7G'],
+    7: ["T7V", "T7Q", "T7R", "T7Y", 'T7G', 'T7D'],
     9: ["Y9E", "Y9G", "Y9Q", "Y9R", "Y9V", "Y9A"],
 }
 
 groupByProperty = {
     "RHKDE": ["D2R", "D2E", "Y9E", "Y9R", "T7R"],
     "STNQ": ["D2N", "Y9Q", "T7Q"],
-    "CUGP": ["D2C", "Y9G", "T7G"],
+    "CUGP": ["D2C", "Y9G", "T7G", "T7D"],
     "AVILMFYW": ["D2A", "D2M", "Y9A", "Y9V", "T7V", "T7Y"],
 }
 
@@ -54,10 +56,11 @@ proteins = [
     "YYDPETGRWY",
     "YYDPETGTWA",
     "YYDPETGGWY",
-    "YYMPETGTWY"
+    "YYMPETGTWY", 
+    "YYDPETGDWY"
 ]
 
-thresholds = np.arange(0.15, 0.50 + 1e-9, 0.04)
+thresholds = np.arange(0.1, 0.50 + 1e-9, 0.04)
 res_colors = {
     2: "orange",
     7: "blue",
