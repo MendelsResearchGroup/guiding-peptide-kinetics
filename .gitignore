@@ -9,6 +9,8 @@ __pycache__/
 # C extensions
 *.so
 fpt_run.*
+transform_structure.*
+nvt_npt.*
 # Distribution / packaging
 .Python
 build/

@@ -22,7 +22,7 @@ GRO="npt.gro"
 CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
-PLUMED_TEMPLATE="src/fpt_plumed/fpt_plumed_$PROTEIN.dat"
+PLUMED_TEMPLATE="src/fpt_plumed/$PROTEIN.dat"
 NSTEPS=40000000
 
 RUN_ID=$(printf "%03d" "$ID")
