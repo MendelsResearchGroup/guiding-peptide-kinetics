@@ -22,6 +22,7 @@ GRO="npt.gro"
 CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
+PLUMED_BASE="../../../src/fpt_plumed/base.dat"
 PLUMED_TEMPLATE="src/fpt_plumed/$PROTEIN.dat"
 NSTEPS=40000000
 
@@ -51,7 +52,7 @@ PLUMED="${DEFFNM}_plumed.dat"
     fi
 
     mkdir -p "$RUN_DIR"
-    cp "../../$MDP" "$GRO" "$TOP" "$CPT" "../$REF" "$RUN_DIR/"
+    cp "../../$MDP" "$GRO" "$TOP" "$CPT" "$PLUMED_BASE" "../$REF" "$RUN_DIR/"
 
     sed "s/__ID__/${RUN_ID}/g" "../../../$PLUMED_TEMPLATE" >"$RUN_DIR/$PLUMED"
 

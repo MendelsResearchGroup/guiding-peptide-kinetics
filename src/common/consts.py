@@ -20,23 +20,22 @@ mutation_map = {
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
     "YYDPETGDWY": "T7D",
-    "chignolin": "WT",
-
+    "chignolin":  "WT",
     "AYDPETGTWY": "Y0A",
     "YYDCETGTWY": "P3C",
     "RYDPETGTWY": "Y0R",
     "QYDPETGTWY": "Y0Q",
     "EYDPETGTWY": "Y0E",
-    "YYDMETGTWY"    : "P3M",
-    # "YYDDETGTWY"    : "P3D",
-    
+    "YYDMETGTWY": "P3M",
+    "YYDDETGTWY": "P3D",
+    "YYDRETGTWY": "P3R"
 }
 
 
 groupByResidue = {
     0: ["Y0A", "Y0R", "Y0Q", "Y0E"],
     2: ["D2A", "D2C", "D2M", "D2N", "D2R", "D2E"],
-    3: ["P3C", "P3M"],
+    3: ["P3C", "P3M", "P3R", "P3D"],
     7: ["T7V", "T7Q", "T7R", "T7Y", 'T7G', 'T7D'],
     9: ["Y9E", "Y9G", "Y9Q", "Y9R", "Y9V", "Y9A"],
 }
