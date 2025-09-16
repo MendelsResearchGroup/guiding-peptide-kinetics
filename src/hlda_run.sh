@@ -40,9 +40,9 @@ printf "===============================================${NC}\n"
   printf "\n${YELLOW}---------- [Validate Periodic Distance] ----------${NC}\n"
   printf "1\n" | gmx mindist -s hlda_run.tpr -f hlda_run_center.xtc -pi -od mindist.xvg
 
-  printf "\n${CYAN}---------- [RMSD Stability Check] ----------${NC}\n"
-  printf "4\n1\n" | gmx rms -s em.tpr -f hlda_run_center.xtc -o rmsd_xray.xvg -tu ns -xvg none
-  python3 ../../src/plots/property.py rmsd_xray.xvg RMSD
+  # printf "\n${CYAN}---------- [RMSD Stability Check] ----------${NC}\n"
+  # printf "4\n1\n" | gmx rms -s em.tpr -f hlda_run_center.xtc -o rmsd_xray.xvg -tu ns -xvg none
+  # python3 ../../src/plots/property.py rmsd_xray.xvg RMSD
 
   printf "\n${YELLOW}---------- [Report Methods] ----------${NC}\n"
   gmx report-methods -s hlda_run.tpr

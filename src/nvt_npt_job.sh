@@ -73,9 +73,9 @@ done
     echo "Pressure" | gmx_mpi energy -f npt.edr -o pressure.xvg -xvg none
     echo "Density" | gmx_mpi energy -f npt.edr -o density.xvg -xvg none
 
-    # Step 6: Plot
-    printf "${YELLOW}\n---------- [Step 6: Plot Results] ----------${NC}\n"
-    python3 ../../../src/plots/property.py temperature.xvg temperature pressure.xvg pressure density.xvg density
+    # # Step 6: Plot
+    # printf "${YELLOW}\n---------- [Step 6: Plot Results] ----------${NC}\n"
+    # python3 ../../../src/plots/property.py temperature.xvg temperature pressure.xvg pressure density.xvg density
 
     printf "\n${CYAN}✅ NVT and NPT simulations complete. Properties plotted.${NC}\n"
 )

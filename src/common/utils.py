@@ -1,7 +1,7 @@
 from scipy import optimize, stats
 import numpy as np
 import pandas as pd
-
+from common.consts import groupByResidue, groupByProperty, mutation_map, proteins
 
 def obtainEstimationsDataFrame(samples, minSampleSize):
     samples.sort()
@@ -32,17 +32,15 @@ def obtainEstimationsDataFrame(samples, minSampleSize):
         }
     )
 
-
 def estimateMFPT(samples, minSampleSize=5):
     """
     Estimates the mean first-passage time.
     """
-
     data = obtainEstimationsDataFrame(samples=samples, minSampleSize=minSampleSize)
-    max = data.loc[data.R2 == data.R2.max()]
-    limit = max.limit
-
-    return float(1 / max.prediction), int(limit)
+    row = data.loc[data.R2 == data.R2.max()].iloc[0]  # take the first matching row
+    limit = int(row.limit)
+    mfpt = float(1.0 / row.prediction)
+    return mfpt, limit
 
 
 def _comulative(t, a):
@@ -62,3 +60,68 @@ def iMetaDMFPT(samples, KStest=False, fitSamples=1000000):
         ret = fit[0]
 
     return ret
+
+short_to_residue = {short: idx for idx, shorts in groupByResidue.items() for short in shorts}
+short_to_property = {short: prop for prop, shorts in groupByProperty.items() for short in shorts}
+
+
+
+eigenvalue_data = pd.read_csv(
+    f"../data/eigenvalues.csv", index_col="Mutant"
+)
+
+
+
+# Tm = pd.read_csv('../data/Tm.csv', index_col='Mutant')
+
+# wt_Tm = Tm['Tm'].get('WT')
+
+def collect_df(is_clearer, all_mfpt, th: float):
+    avg_change_diff = pd.read_csv(
+        f"../data/average_change_difference{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant"
+    )
+    avg_change_folded = pd.read_csv(
+        f"../data/average_change_folded{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant"
+    )
+    avg_change_unfolded = pd.read_csv(
+        f"../data/average_change_unfolded{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant"
+    )
+    cov_dot_product = pd.read_csv(
+        f"../data/cov_dot_products{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant"
+    )
+
+    variance_differences = pd.read_csv(
+        f"../data/variance_differences{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant"
+    )
+    rows = []
+
+    for long_name in proteins:
+        short = mutation_map.get(long_name)
+        if short is None:
+            raise ValueError(f"Unknown mutation: {long_name}")
+        s = np.sort(np.array(all_mfpt[long_name][th]))
+        mfpt, lim = estimateMFPT(s)
+        # print(f"{long_name} ({short}): {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
+
+        rows.append({
+            "long": long_name,
+            "short": short,
+            "eigenvalue": eigenvalue_data.loc[short, "eigenvalue"],
+            "mfpt": mfpt,
+            "lim": lim,
+            "cos_sim_folded": cov_dot_product['CosSim_Folded'].get(short, None),
+            "cos_sim_unfolded": cov_dot_product['CosSim_Unfolded'].get(short, None),
+            "avg_change_diff": avg_change_diff['AvgChange_Diff_F-U'].get(short, None),
+            "abs_dvar_folded": variance_differences['abs_dvar_F'].get(short, None),
+            "avg_change_folded": avg_change_folded['AvgChange_Folded'].get(short, None),
+            "avg_change_unfolded": avg_change_unfolded['AvgChange_Unfolded'].get(short, None),
+            "abs_dvar_unfolded": variance_differences['abs_dvar_U'].get(short, None),
+            "residue_idx": short_to_residue.get(short),
+            "property_grp": short_to_property.get(short),
+            # "tm": Tm['Tm'].get(short),
+        })
+
+    df = pd.DataFrame(rows)
+    df.set_index("short", inplace=True)
+    # df = df.drop("T7G")
+    return df
