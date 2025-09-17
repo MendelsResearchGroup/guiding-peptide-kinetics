@@ -1,7 +1,7 @@
 import numpy as np
 
 # YYDPETGTWY
-mutation_map = {
+long_to_short = {
     "YYAPETGTWY": "D2A",
     "YYCPETGTWY": "D2C",
     "YYMPETGTWY": "D2M",
@@ -18,7 +18,7 @@ mutation_map = {
     "YYDPETGQWY": "T7Q",
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
-    "YYDPETGGWY": "T7G",
+    # "YYDPETGGWY": "T7G",
     "YYDPETGDWY": "T7D",
     "chignolin":  "WT",
     "AYDPETGTWY": "Y0A",
@@ -31,6 +31,37 @@ mutation_map = {
     "YYDRETGTWY": "P3R"
 }
 
+short_to_medium = {
+    "D2A": "Asp2Ala",
+    "D2R": "Asp2Arg",
+    "D2N": "Asp2Asn",
+    "D2C": "Asp2Cys",
+    "D2E": "Asp2Glu",
+    "D2K": "Asp2Lys",
+    "D2M": "Asp2Met",
+    "D2Y": "Asp2Tyr",
+    "P3R": "Pro3Arg",
+    "P3D": "Pro3Asp",
+    "P3C": "Pro3Cys",
+    "P3M": "Pro3Met",
+    "T7R": "Thr7Arg",
+    "T7D": "Thr7Asp",
+    "T7Q": "Thr7Gln",
+    # "T7G": "Thr7Gly",
+    "T7Y": "Thr7Tyr",
+    "T7V": "Thr7Val",
+    "Y0A": "Tyr0Ala",
+    "Y0R": "Tyr0Arg",
+    "Y0Q": "Tyr0Gln",
+    "Y0E": "Tyr0Glu",
+    "Y9A": "Tyr9Ala",
+    "Y9R": "Tyr9Arg",
+    "Y9Q": "Tyr9Gln",
+    "Y9E": "Tyr9Glu",
+    "Y9G": "Tyr9Gly",
+    "Y9K": "Tyr9Lys",
+    "Y9V": "Tyr9Val"
+}
 
 groupByResidue = {
     0: ["Y0A", "Y0R", "Y0Q", "Y0E"],
@@ -47,7 +78,7 @@ groupByProperty = {
     "AVILMFYW": ["D2A", "D2M", "Y9A", "Y9V", "T7V", "T7Y", "Y0A"],
 }
 
-proteins = list(mutation_map.keys())
+proteins = list(long_to_short.keys())
 
 thresholds = np.arange(0.1, 0.50 + 1e-9, 0.04)
 res_colors = {

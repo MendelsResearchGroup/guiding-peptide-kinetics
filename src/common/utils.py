@@ -1,7 +1,7 @@
 from scipy import optimize, stats
 import numpy as np
 import pandas as pd
-from common.consts import groupByResidue, groupByProperty, mutation_map, proteins
+from common.consts import groupByResidue, groupByProperty, long_to_short, short_to_medium, proteins
 
 def obtainEstimationsDataFrame(samples, minSampleSize):
     samples.sort()
@@ -65,13 +65,6 @@ short_to_residue = {short: idx for idx, shorts in groupByResidue.items() for sho
 short_to_property = {short: prop for prop, shorts in groupByProperty.items() for short in shorts}
 
 
-
-eigenvalue_data = pd.read_csv(
-    f"../data/eigenvalues.csv", index_col="Mutant"
-)
-
-
-
 # Tm = pd.read_csv('../data/Tm.csv', index_col='Mutant')
 
 # wt_Tm = Tm['Tm'].get('WT')
@@ -93,18 +86,23 @@ def collect_df(is_clearer, all_mfpt, th: float):
     variance_differences = pd.read_csv(
         f"../data/variance_differences{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant"
     )
+    eigenvalue_data = pd.read_csv(
+    f"../data/eigenvalues{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant"
+)
+    
     rows = []
 
     for long_name in proteins:
-        short = mutation_map.get(long_name)
-        if short is None:
-            raise ValueError(f"Unknown mutation: {long_name}")
+        short = long_to_short.get(long_name)
+        medium = short_to_medium.get(short)
+
         s = np.sort(np.array(all_mfpt[long_name][th]))
         mfpt, lim = estimateMFPT(s)
         # print(f"{long_name} ({short}): {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
 
         rows.append({
             "long": long_name,
+            medium: medium,
             "short": short,
             "eigenvalue": eigenvalue_data.loc[short, "eigenvalue"],
             "mfpt": mfpt,
@@ -123,5 +121,5 @@ def collect_df(is_clearer, all_mfpt, th: float):
 
     df = pd.DataFrame(rows)
     df.set_index("short", inplace=True)
-    # df = df.drop("T7G")
+
     return df
