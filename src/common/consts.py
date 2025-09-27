@@ -18,7 +18,7 @@ long_to_short = {
     "YYDPETGQWY": "T7Q",
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
-    # "YYDPETGGWY": "T7G",
+    "YYDPETGGWY": "T7G",
     "YYDPETGDWY": "T7D",
     "chignolin":  "WT",
     "AYDPETGTWY": "Y0A",
