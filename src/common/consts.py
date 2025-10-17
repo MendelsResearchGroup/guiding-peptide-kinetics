@@ -28,8 +28,15 @@ long_to_short = {
     "EYDPETGTWY": "Y0E",
     "YYDMETGTWY": "P3M",
     "YYDDETGTWY": "P3D",
-    "YYDRETGTWY": "P3R"
+    "YYDRETGTWY": "P3R",
+    "YYDPATGTWY": "E4A",
+    "YYDPGTGTWY": "E4G",
+    "YYDPRTGTWY": "E4R",
+    "YYDPYTGTWY": "E4Y",
+
 }
+
+short_to_long = {v: k for k, v in long_to_short.items()}
 
 short_to_medium = {
     "D2A": "Asp2Ala",
@@ -60,13 +67,18 @@ short_to_medium = {
     "Y9E": "Tyr9Glu",
     "Y9G": "Tyr9Gly",
     "Y9K": "Tyr9Lys",
-    "Y9V": "Tyr9Val"
+    "Y9V": "Tyr9Val",
+    "E4A": "Glu4Ala", 
+    "E4G": "Glu4Gly", 
+    "E4R": "Glu4Arg", 
+    "E4Y":"Glu4Tyr"
 }
 
 groupByResidue = {
     0: ["Y0A", "Y0R", "Y0Q", "Y0E"],
     2: ["D2A", "D2C", "D2M", "D2N", "D2R", "D2E"],
     3: ["P3C", "P3M", "P3R", "P3D"],
+    4: ["E4A", "E4G", "E4R", "E4Y"],
     7: ["T7V", "T7Q", "T7R", "T7Y", 'T7G', 'T7D'],
     9: ["Y9E", "Y9G", "Y9Q", "Y9R", "Y9V", "Y9A"],
 }

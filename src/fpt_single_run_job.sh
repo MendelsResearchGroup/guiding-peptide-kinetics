@@ -24,7 +24,7 @@ TOP="topol.top"
 REF="reference.pdb"
 PLUMED_BASE="../../../src/fpt_plumed/base.dat"
 PLUMED_TEMPLATE="src/fpt_plumed/$PROTEIN.dat"
-NSTEPS=40000000
+NSTEPS=50000000
 
 RUN_ID=$(printf "%03d" "$ID")
 BASE="$PROTEIN"
