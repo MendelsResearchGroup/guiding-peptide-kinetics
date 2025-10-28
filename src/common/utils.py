@@ -65,7 +65,7 @@ short_to_residue = {short: idx for idx, shorts in groupByResidue.items() for sho
 short_to_property = {short: prop for prop, shorts in groupByProperty.items() for short in shorts}
 
 
-# Tm = pd.read_csv('../data/Tm.csv', index_col='Mutant')
+Tm = pd.read_csv('../data/Tm.csv', index_col='Mutant')
 
 # wt_Tm = Tm['Tm'].get('WT')
 
@@ -76,6 +76,7 @@ def collect_df(is_clearer, all_mfpt, th: float):
     cov_dot_product = pd.read_csv(f"../data/cov_dot_products{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
     variance_differences = pd.read_csv(f"../data/variance_differences{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
     eigenvalue_data = pd.read_csv(f"../data/eigenvalues{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
+    enthalpy = pd.read_csv(f"../data/enthalpy{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
     
     rows = []
 
@@ -91,21 +92,22 @@ def collect_df(is_clearer, all_mfpt, th: float):
             "long": long_name,
             medium: medium,
             "short": short,
-            "eigenvalue": eigenvalue_data.loc[short, "eigenvalue"],
+            "eigenvalue": eigenvalue_data.loc[short, "HLDA_Eigenvalue"],
             "mfpt": mfpt,
             "lim": lim,
-            "cos_sim_F": cov_dot_product['CosSim_Folded'].get(short, None),
-            "cos_sim_U": cov_dot_product['CosSim_Unfolded'].get(short, None),
-            "avg_change_diff": avg_change_diff['AvgChange_Diff_F-U'].get(short, None),
+            # "cos_sim_F": cov_dot_product['CosSim_Folded'].get(short, None),
+            # "cos_sim_U": cov_dot_product['CosSim_Unfolded'].get(short, None),
+            # "avg_change_diff": avg_change_diff['AvgChange_Diff_F-U'].get(short, None),
             "abs_dvar_F": variance_differences['abs_dvar_F'].get(short, None),
-            "abs_dvar_U": variance_differences['abs_dvar_U'].get(short, None),   
-            "dvar_F(WT-Mut)": variance_differences['dvar_F(WT-Mut)'].get(short, None),
-            "dvar_U(WT-Mut)": variance_differences['dvar_U(WT-Mut)'].get(short, None),
-            "avg_change_F": avg_change_folded['AvgChange_Folded'].get(short, None),
-            "avg_change_U": avg_change_unfolded['AvgChange_Unfolded'].get(short, None),
+            # "abs_dvar_U": variance_differences['abs_dvar_U'].get(short, None),   
+            # "dvar_F(WT-Mut)": variance_differences['dvar_F(WT-Mut)'].get(short, None),
+            # "dvar_U(WT-Mut)": variance_differences['dvar_U(WT-Mut)'].get(short, None),
+            # "avg_change_F": avg_change_folded['AvgChange_Folded'].get(short, None),
+            # "avg_change_U": avg_change_unfolded['AvgChange_Unfolded'].get(short, None),
+            "enthalpy": enthalpy['dH'].get(short, None),
             "residue_idx": short_to_residue.get(short),
             "property_grp": short_to_property.get(short),
-            # "tm": Tm['Tm'].get(short),
+            "Tm": Tm['Tm'].get(short),
         })
 
     df = pd.DataFrame(rows)

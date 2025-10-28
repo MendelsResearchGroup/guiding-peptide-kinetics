@@ -71,7 +71,7 @@ short_to_medium = {
     "E4A": "Glu4Ala", 
     "E4G": "Glu4Gly", 
     "E4R": "Glu4Arg", 
-    "E4Y":"Glu4Tyr"
+    "E4Y": "Glu4Tyr"
 }
 
 groupByResidue = {
@@ -97,6 +97,7 @@ res_colors = {
     0: "red",
     2: "orange",
     3: "purple",
+    4: "brown",
     7: "blue",
     9: "green"
 }
