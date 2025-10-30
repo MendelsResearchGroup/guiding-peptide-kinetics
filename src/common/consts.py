@@ -2,6 +2,7 @@ import numpy as np
 
 # YYDPETGTWY
 long_to_short = {
+    "chignolin":  "WT",
     "YYAPETGTWY": "D2A",
     "YYCPETGTWY": "D2C",
     "YYMPETGTWY": "D2M",
@@ -20,20 +21,22 @@ long_to_short = {
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
     "YYDPETGDWY": "T7D",
-    "chignolin":  "WT",
-    "AYDPETGTWY": "Y0A",
-    "YYDCETGTWY": "P3C",
     "RYDPETGTWY": "Y0R",
     "QYDPETGTWY": "Y0Q",
     "EYDPETGTWY": "Y0E",
+    "AYDPETGTWY": "Y0A",
     "YYDMETGTWY": "P3M",
     "YYDDETGTWY": "P3D",
     "YYDRETGTWY": "P3R",
+    "YYDCETGTWY": "P3C",
     "YYDPATGTWY": "E4A",
     "YYDPGTGTWY": "E4G",
     "YYDPRTGTWY": "E4R",
     "YYDPYTGTWY": "E4Y",
-
+    "YYKPETGTWY": "D2K",
+    "YYYPETGTWY": "D2Y",
+    "YYDPETGTWK": "Y9K",
+    
 }
 
 short_to_long = {v: k for k, v in long_to_short.items()}
