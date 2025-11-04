@@ -35,7 +35,7 @@ long_to_short = {
     "YYDPYTGTWY": "E4Y",
     "YYKPETGTWY": "D2K",
     "YYYPETGTWY": "D2Y",
-    "YYDPETGTWK": "Y9K",
+    # "YYDPETGTWK": "Y9K",
     
 }
 
@@ -79,7 +79,7 @@ short_to_medium = {
 
 groupByResidue = {
     0: ["Y0A", "Y0R", "Y0Q", "Y0E"],
-    2: ["D2A", "D2C", "D2M", "D2N", "D2R", "D2E"],
+    2: ["D2A", "D2C", "D2M", "D2N", "D2R", "D2E", "D2K", "D2Y"],
     3: ["P3C", "P3M", "P3R", "P3D"],
     4: ["E4A", "E4G", "E4R", "E4Y"],
     7: ["T7V", "T7Q", "T7R", "T7Y", 'T7G', 'T7D'],

@@ -88,6 +88,12 @@ def collect_df(is_clearer, all_mfpt, th: float):
     cov_dot_product = pd.read_csv(f"../data/cov_dot_products{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
     variance_differences = pd.read_csv(f"../data/variance_differences{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
     eigenvalue_data = pd.read_csv(f"../data/eigenvalues{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
+    
+    eigenvalue_data_10_30 = pd.read_csv(f"../data/hlda_summary_10_30.csv", index_col="Mutant")
+    eigenvalue_data_12_26 = pd.read_csv(f"../data/hlda_summary_12_26.csv", index_col="Mutant")
+    eigenvalue_data_12_30 = pd.read_csv(f"../data/hlda_summary_12_30.csv", index_col="Mutant")
+    eigenvalue_data_14_26 = pd.read_csv(f"../data/hlda_summary_14_26.csv", index_col="Mutant")
+    eigenvalue_data_14_30 = pd.read_csv(f"../data/hlda_summary_14_30.csv", index_col="Mutant")
     enthalpy = pd.read_csv(f"../data/enthalpy{'(clearer state)' if is_clearer else ''}.csv", index_col="Mutant")
     
     rows = []
@@ -105,6 +111,11 @@ def collect_df(is_clearer, all_mfpt, th: float):
             medium: medium,
             "short": short,
             "eigenvalue": eigenvalue_data.loc[short, "HLDA_Eigenvalue"],
+            "eigenvalue_10_30": eigenvalue_data_10_30.loc[short, "HLDA_Eigenvalue"],
+            "eigenvalue_12_26": eigenvalue_data_12_26.loc[short, "HLDA_Eigenvalue"],
+            "eigenvalue_12_30": eigenvalue_data_12_30.loc[short, "HLDA_Eigenvalue"],
+            "eigenvalue_14_26": eigenvalue_data_14_26.loc[short, "HLDA_Eigenvalue"],
+            "eigenvalue_14_30": eigenvalue_data_14_30.loc[short, "HLDA_Eigenvalue"],
             "mfpt": mfpt,
             "lim": lim,
             "cossim_F": cov_dot_product['CosSim_Folded'].get(short, None),
