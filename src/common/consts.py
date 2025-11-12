@@ -35,7 +35,7 @@ long_to_short = {
     "YYDPYTGTWY": "E4Y",
     "YYKPETGTWY": "D2K",
     "YYYPETGTWY": "D2Y",
-    # "YYDPETGTWK": "Y9K",
+    "YYDPETGTWK": "Y9K",
     
 }
 
