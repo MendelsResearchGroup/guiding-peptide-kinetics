@@ -7,16 +7,16 @@ long_to_short = {
     "YYCPETGTWY": "D2C",
     "YYMPETGTWY": "D2M",
     "YYNPETGTWY": "D2N",
-    "YYRPETGTWY": "D2R",
+    # "YYRPETGTWY": "D2R",
     "YYEPETGTWY": "D2E",
     "YYDPETGTWE": "Y9E",
     "YYDPETGTWG": "Y9G",
-    "YYDPETGTWQ": "Y9Q",
+    # "YYDPETGTWQ": "Y9Q",
     "YYDPETGTWR": "Y9R",
     "YYDPETGTWV": "Y9V",
     "YYDPETGTWA": "Y9A",
     "YYDPETGVWY": "T7V",
-    "YYDPETGQWY": "T7Q",
+    # "YYDPETGQWY": "T7Q",
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
@@ -24,7 +24,7 @@ long_to_short = {
     "RYDPETGTWY": "Y0R",
     "QYDPETGTWY": "Y0Q",
     "EYDPETGTWY": "Y0E",
-    "AYDPETGTWY": "Y0A",
+    # "AYDPETGTWY": "Y0A",
     "YYDMETGTWY": "P3M",
     "YYDDETGTWY": "P3D",
     "YYDRETGTWY": "P3R",
@@ -97,7 +97,7 @@ groupByProperty = {
 
 proteins = list(long_to_short.keys())
 
-thresholds = np.arange(0.1, 0.50 + 1e-9, 0.04)
+thresholds = np.arange(0.25, 0.5 - 1e-9, 0.04)
 res_colors = {
     0: "red",
     2: "orange",

@@ -103,8 +103,9 @@ def collect_df(is_clearer, all_mfpt, th: float):
         medium = short_to_medium.get(short)
 
         s = np.sort(np.array(all_mfpt[long_name][th]))
+        print(long_name)
         mfpt, lim = estimateMFPT(s)
-        # print(f"{long_name} ({short}): {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
+        print(f"{long_name} ({short}): {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
 
         rows.append({
             "long": long_name,
