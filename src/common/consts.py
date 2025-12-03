@@ -104,6 +104,7 @@ res_colors = {
     2: "orange",
     3: "purple",
     4: "brown",
+    5: "black",
     7: "blue",
     9: "green"
 }
