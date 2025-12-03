@@ -16,7 +16,7 @@ long_to_short = {
     "YYDPETGTWV": "Y9V",
     "YYDPETGTWA": "Y9A",
     "YYDPETGVWY": "T7V",
-    "YYDPETGQWY": "T7Q",
+    # "YYDPETGQWY": "T7Q", # Not enough grid size
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
@@ -98,7 +98,7 @@ groupByProperty = {
 
 proteins = list(long_to_short.keys())
 
-thresholds = np.arange(0.25, 0.5 - 1e-9, 0.04)
+thresholds = np.arange(0.28, 0.5 - 1e-9, 0.04)
 res_colors = {
     0: "red",
     2: "orange",
