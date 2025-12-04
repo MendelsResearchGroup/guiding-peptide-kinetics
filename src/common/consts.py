@@ -29,8 +29,8 @@ long_to_short = {
     "YYDDETGTWY": "P3D",
     # "YYDRETGTWY": "P3R",
     "YYDCETGTWY": "P3C",
-    # "YYDPERGTWY": "T5R",
-    # "YYDPEGGTWY": "T5G",
+    "YYDPERGTWY": "T5R",
+    "YYDPEGGTWY": "T5G",
     # "YYDPEYGTWY": "T5Y", Not yet sampled
     "YYDPATGTWY": "E4A",
     "YYDPGTGTWY": "E4G",
