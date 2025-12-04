@@ -27,15 +27,15 @@ long_to_short = {
     "AYDPETGTWY": "Y0A",
     "YYDMETGTWY": "P3M",
     "YYDDETGTWY": "P3D",
-    "YYDRETGTWY": "P3R",
+    # "YYDRETGTWY": "P3R",
     "YYDCETGTWY": "P3C",
-    "YYDPERGTWY": "T5R",
-    "YYDPEGGTWY": "T5G",
+    # "YYDPERGTWY": "T5R",
+    # "YYDPEGGTWY": "T5G",
     # "YYDPEYGTWY": "T5Y", Not yet sampled
     "YYDPATGTWY": "E4A",
     "YYDPGTGTWY": "E4G",
     "YYDPRTGTWY": "E4R",
-    "YYDPYTGTWY": "E4Y",
+    # "YYDPYTGTWY": "E4Y", # Starts from high rmsd
     "YYKPETGTWY": "D2K",
     "YYYPETGTWY": "D2Y",
     # "YYDPETGTWK": "Y9K", outlier?
