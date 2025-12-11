@@ -9,6 +9,8 @@ long_to_short = {
     "YYNPETGTWY": "D2N",
     "YYRPETGTWY": "D2R",
     "YYEPETGTWY": "D2E",
+    "YYYPETGTWY": "D2Y",
+    "YYRPETGTWY": "D2R",
     "YYDPETGTWE": "Y9E",
     "YYDPETGTWG": "Y9G",
     "YYDPETGTWQ": "Y9Q",
@@ -16,7 +18,7 @@ long_to_short = {
     "YYDPETGTWV": "Y9V",
     "YYDPETGTWA": "Y9A",
     "YYDPETGVWY": "T7V",
-    "YYDPETGQWY": "T7Q", # Not enough grid size
+    # "YYDPETGQWY": "T7Q", # Not enough grid size
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
@@ -32,7 +34,7 @@ long_to_short = {
     "YYDPERGTWY": "T5R",
     "YYDPEGGTWY": "T5G",
     "YYDPEYGTWY": "T5Y", # Not yet sampled
-    "YYDPEDGTWY": "T5D",# Not yet sampled
+    "YYDPEDGTWY": "T5D", # Not yet sampled
     "YYDPATGTWY": "E4A",
     "YYDPGTGTWY": "E4G",
     "YYDPRTGTWY": "E4R",
@@ -86,6 +88,7 @@ groupByResidue = {
     2: ["D2A", "D2C", "D2M", "D2N", "D2R", "D2E", "D2K", "D2Y"],
     3: ["P3C", "P3M", "P3R", "P3D"],
     4: ["E4A", "E4G", "E4R", "E4Y"],
+    5: ["T5R", "T5G", "T5Y", "T5D"],
     7: ["T7V", "T7Q", "T7R", "T7Y", 'T7G', 'T7D'],
     9: ["Y9E", "Y9G", "Y9Q", "Y9R", "Y9V", "Y9A"],
 }
@@ -105,7 +108,7 @@ res_colors = {
     2: "orange",
     3: "purple",
     4: "brown",
-    5: "black",
+    5: "cyan",
     7: "blue",
     9: "green"
 }
