@@ -99,7 +99,7 @@ groupByProperty = {
 
 proteins = list(long_to_short.keys())
 
-thresholds = np.arange(0.28, 0.5 + 1e-9, 0.02)
+thresholds = np.round(np.arange(0.28, 0.5 + 1e-9, 0.02), 2)
 res_colors = {
     0: "red",
     2: "orange",
