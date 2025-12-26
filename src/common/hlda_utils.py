@@ -4,22 +4,26 @@ import numpy as np
 import pandas as pd
 
 
-def hlda_from_moments(muA, SA, muB, SB, desc_cols, ridge: float = 1e-8):
-    """
-    Compute HLDA projection vector and eigenvalue from folded/unfolded moments.
-    """
-    SA = SA + ridge * np.eye(SA.shape[0])
-    SB = SB + ridge * np.eye(SB.shape[0])
-    PA = np.linalg.pinv(SA)
-    PB = np.linalg.pinv(SB)
-    P = PA + PB
-    delta = muA - muB
-    W = P @ delta
-    if (delta @ W) < 0:
-        W = -W
-    W /= np.linalg.norm(W)
-    lam = float(delta @ (P @ delta))
-    return pd.Series(W, index=desc_cols), lam
+def hlda_from_moments(muA, SA, muB, SB, desc_cols, ridge=0.0):
+    muA = np.asarray(muA, float)
+    muB = np.asarray(muB, float)
+    SA = np.asarray(SA, float)
+    SB = np.asarray(SB, float)
+
+    p = SA.shape[0]
+    if ridge > 0:
+        SA = SA + ridge * np.eye(p)
+        SB = SB + ridge * np.eye(p)
+
+    d = muA - muB
+
+    uA = np.linalg.solve(SA, d)
+    uB = np.linalg.solve(SB, d)
+    w = uA + uB
+
+    lam = 0.5 * float(d @ w)
+
+    return pd.Series(w, index=desc_cols), lam
 
 
 def prune(SA, SB, desc_cols, threshold: float):
@@ -37,7 +41,7 @@ def prune(SA, SB, desc_cols, threshold: float):
             np.fill_diagonal(corr, 0.0)
             i_max, j_max = np.unravel_index(np.argmax(np.abs(corr)), corr.shape)
             maxcorr = abs(corr[i_max, j_max])
-            if maxcorr <= threshold:
+            if maxcorr < threshold:
                 break
             keep.pop(j_max)
         return set(keep)

@@ -283,108 +283,79 @@ def load_lambda_grid(
 
 
 def collect_df(
-    is_clearer: bool,
     all_mfpt,
     mfpt_threshold: float,
-    tF: float | None = 0.25,
-    tU: float | None = 0.68,
-    skip_short: set[str] | None = None,
-    lambda_df: pd.DataFrame | None = None,
-    base_dir: Path = Path("../../data/traj"),
-    lambda_cache: Path | str = Path("../data/hlda_lambda_grid.pkl"),
-    sample_n: int = 1_000_000,
-    n_bins: int = 200,
-    rmsd_col: str = "rmsd_ca",
-    prune_threshold: float = 0.93,
-    quiet: bool = False,
+    tF: float,
+    tU: float,
+    skip_short: set[str],
+    lambda_df: pd.DataFrame,
+    quiet: bool,
 ) -> pd.DataFrame:
     """
     Assemble MFPT, HLDA eigenvalues, and variance deltas for the given thresholds.
 
     Parameters
     ----------
-    is_clearer : bool
-        Ignored (kept for backwards compatibility with notebooks).
     all_mfpt : dict
         Mapping long protein names -> {threshold -> samples}.
     mfpt_threshold : float
         Threshold used for MFPT estimation.
-    tF, tU : float, optional
-        Folded/unfolded RMSD thresholds used for the HLDA grid. Defaults to
-        (0.25, 0.68) for compatibility with older notebooks.
-    lambda_df : DataFrame, optional
-        Precomputed HLDA grid. If None, it will be loaded or computed.
+    tF, tU : float
+        Folded/unfolded RMSD thresholds used for the HLDA grid.
+    skip_short : set[str]
+        Short mutant names to skip.
+    lambda_df : DataFrame
+        Precomputed HLDA grid containing the requested (tF, tU).
+    quiet : bool
+        If True, suppress per-mutant MFPT output.
     """
-    tF = 0.25 if tF is None else tF
-    tU = 0.68 if tU is None else tU
-
-    lambda_df = lambda_df if lambda_df is not None else load_lambda_grid(
-        cache_path=lambda_cache,
-        force=False,
-        base_dir=base_dir,
-        tF_grid=[tF],
-        tU_grid=[tU],
-        sample_n=sample_n,
-        n_bins=n_bins,
-        rmsd_col=rmsd_col,
-        prune_threshold=prune_threshold,
-    )
+    skip_short = set(skip_short)
+    required = [p for p in proteins if long_to_short.get(p) not in skip_short]
+    missing_proteins = [p for p in required if p not in all_mfpt]
+    if missing_proteins:
+        raise KeyError(f"Missing MFPT entries for proteins: {', '.join(missing_proteins)}")
 
     lam_slice = lambda_df[
         np.isclose(lambda_df["tF"], tF) & np.isclose(lambda_df["tU"], tU)
     ].set_index("Mutant")
+    if lam_slice.empty:
+        raise ValueError(f"lambda_df missing rows for tF={tF}, tU={tU}")
+    if "WT" not in lam_slice.index:
+        raise KeyError("WT row missing from lambda_df for requested tF/tU")
 
-    wt_vars_F = np.array(lam_slice.loc["WT", "var_F_diag"], float) if "WT" in lam_slice.index else None
-    wt_vars_U = np.array(lam_slice.loc["WT", "var_U_diag"], float) if "WT" in lam_slice.index else None
+    wt_vars_F = np.array(lam_slice.loc["WT", "var_F_diag"], float)
+    wt_vars_U = np.array(lam_slice.loc["WT", "var_U_diag"], float)
 
     rows = []
-    missing = []
-
-    skip_short = set() if skip_short is None else set(skip_short)
-    available = {k for k in all_mfpt.keys() if long_to_short.get(k) not in skip_short}
-    missing_proteins = [p for p in proteins if p not in available]
-    if missing_proteins and not quiet:
-        print(f"Warning: missing MFPT entries for proteins: {', '.join(missing_proteins)}")
-
-    for long_name in proteins:
-        if long_name not in available:
-            continue
+    for long_name in required:
         short = long_to_short.get(long_name)
         medium = short_to_medium.get(short)
 
         # locate the matching threshold key with tolerance
-        thr_key = None
-        try:
-            for k in all_mfpt[long_name].keys():
-                if np.isclose(float(k), mfpt_threshold):
-                    thr_key = k
-                    break
-        except Exception:
-            thr_key = None
-
+        thr_key = next(
+            (k for k in all_mfpt[long_name].keys() if np.isclose(float(k), mfpt_threshold)),
+            None,
+        )
         if thr_key is None:
-            missing.append((long_name, mfpt_threshold))
-            mfpt_samples = None
-        else:
-            mfpt_samples = np.sort(np.array(all_mfpt[long_name][thr_key], float))
+            raise KeyError(f"MFPT threshold {mfpt_threshold} missing for {long_name}")
 
-        if mfpt_samples is None or mfpt_samples.size == 0:
-            mfpt = np.nan
-            lim = 0
+        mfpt_samples = np.sort(np.array(all_mfpt[long_name][thr_key], float))
+        if mfpt_samples.size == 0:
+            raise ValueError(f"Empty MFPT samples for {long_name} at threshold {mfpt_threshold}")
         else:
             mfpt, lim = estimateMFPT(mfpt_samples)
             if not quiet:
                 print(f"{long_name} ({short}): {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
 
-        lam_row = lam_slice.loc[short] if short in lam_slice.index else None
-        varF = np.array(lam_row["var_F_diag"], float) if lam_row is not None else None
-        varU = np.array(lam_row["var_U_diag"], float) if lam_row is not None else None
+        if short not in lam_slice.index:
+            raise KeyError(f"Mutant {short} missing from lambda_df for tF={tF}, tU={tU}")
+        lam_row = lam_slice.loc[short]
+        varF = np.array(lam_row["var_F_diag"], float)
+        varU = np.array(lam_row["var_U_diag"], float)
 
-        abs_dvar_F_sum = float(np.nansum(np.abs(varF - wt_vars_F))) if varF is not None and wt_vars_F is not None else np.nan
-        abs_dvar_U_sum = float(np.nansum(np.abs(varU - wt_vars_U))) if varU is not None and wt_vars_U is not None else np.nan
+        abs_dvar_F_sum = float(np.nansum(np.abs(varF - wt_vars_F)))
+        abs_dvar_U_sum = float(np.nansum(np.abs(varU - wt_vars_U)))
 
-        if lam_row is None or "res_weights" not in lam_row:
-            raise ValueError("HLDA residue weights missing; rebuild hlda_lambda_grid.pkl with weights.")
         res_weights = lam_row["res_weights"]
         res_weight_cols = {
             f"res_weight_{i}": (res_weights[i] if i < len(res_weights) else np.nan)
@@ -395,7 +366,7 @@ def collect_df(
             "long": long_name,
             "medium": medium,
             "short": short,
-            "lambda": float(lam_row["lambda"]) if lam_row is not None else np.nan,
+            "lambda": float(lam_row["lambda"]),
             "tF": tF,
             "tU": tU,
             "mfpt": mfpt,
@@ -411,17 +382,14 @@ def collect_df(
             "Tm": Tm["Tm"].get(short),
             "dTm": (Tm["Tm"].get(short) - Tm["Tm"].get("WT")) if short in Tm.index else np.nan,
             "abs_dTm": abs(Tm["Tm"].get(short) - Tm["Tm"].get("WT")) if short in Tm.index else np.nan,
-            "n_desc": int(lam_row["n_desc"]) if lam_row is not None else np.nan,
-            "nF": int(lam_row["nF"]) if lam_row is not None else np.nan,
-            "nU": int(lam_row["nU"]) if lam_row is not None else np.nan,
-            "mean_rmsd_F": float(lam_row["mean_rmsd_F"]) if lam_row is not None and "mean_rmsd_F" in lam_row else np.nan,
-            "mean_rmsd_U": float(lam_row["mean_rmsd_U"]) if lam_row is not None and "mean_rmsd_U" in lam_row else np.nan,
+            "n_desc": int(lam_row["n_desc"]),
+            "nF": int(lam_row["nF"]),
+            "nU": int(lam_row["nU"]),
+            "mean_rmsd_F": float(lam_row["mean_rmsd_F"]) if "mean_rmsd_F" in lam_row else np.nan,
+            "mean_rmsd_U": float(lam_row["mean_rmsd_U"]) if "mean_rmsd_U" in lam_row else np.nan,
             **res_weight_cols,
         })
 
     df = pd.DataFrame(rows)
     df.set_index("short", inplace=True)
-    if missing:
-        details = ", ".join(f"{name}@{thr}" for name, thr in missing)
-        raise ValueError(f"MFPT samples missing for: {details}")
     return df
