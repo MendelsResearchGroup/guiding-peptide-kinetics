@@ -17,11 +17,16 @@ def hlda_from_moments(muA, SA, muB, SB, desc_cols, ridge=0.0):
 
     d = muA - muB
 
-    uA = np.linalg.solve(SA, d)
-    uB = np.linalg.solve(SB, d)
-    w = uA + uB
+    Sw_inv = np.linalg.inv(SA) + np.linalg.inv(SB)
+    Sb = 0.5 * np.outer(d, d)
 
-    lam = 0.5 * float(d @ w)
+    eigvals, eigvecs = np.linalg.eig(Sw_inv @ Sb)
+    idx = int(np.argmax(np.real(eigvals)))
+    lam = float(np.real(eigvals[idx]))
+    w = np.real(eigvecs[:, idx])
+
+    Sw = np.linalg.inv(Sw_inv)
+    w = w / np.sqrt(float(w.T @ Sw @ w))
 
     return pd.Series(w, index=desc_cols), lam
 
