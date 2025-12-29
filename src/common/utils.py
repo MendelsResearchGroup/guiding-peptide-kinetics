@@ -112,7 +112,7 @@ def _mean_abs_diff(a: np.ndarray | None, b: np.ndarray | None) -> float:
     return float(np.nanmean(np.abs(a[:n] - b[:n])))
 
 
-def _load_colvar_pair(base_dir: Path, sample_n: int, rmsd_col: str):
+def _load_colvar_pair(base_dir: Path, sample_n: int, rmsd_col: str, normalize_desc: bool = False):
     f_path = base_dir / "COLVAR_CV_F"
     uf_path = base_dir / "COLVAR_CV_UF"
     if not (f_path.exists() and uf_path.exists()):
@@ -126,6 +126,12 @@ def _load_colvar_pair(base_dir: Path, sample_n: int, rmsd_col: str):
     usecols = desc_cols + [rmsd_col]
     df_F = load_colvar(f_path, usecols, sample_n)
     df_UF = load_colvar(uf_path, usecols, sample_n)
+    if normalize_desc:
+        pooled = pd.concat([df_F[desc_cols], df_UF[desc_cols]], axis=0)
+        mean = pooled.mean()
+        std = pooled.std(ddof=0)
+        df_F[desc_cols] = (df_F[desc_cols] - mean) / std
+        df_UF[desc_cols] = (df_UF[desc_cols] - mean) / std
     return df_F, df_UF, desc_cols
 
 
@@ -162,6 +168,9 @@ def compute_lambda_grid(
     n_bins: int = 200,
     rmsd_col: str = "rmsd_ca",
     prune_threshold: float = 0.93,
+    normalize_desc: bool = False,
+    normalize_desc_for_lambda: bool | None = None,
+    normalize_desc_for_weights: bool | None = None,
 ):
     """
     Compute HLDA eigenvalues for a grid of (tF, tU) RMSD thresholds.
@@ -173,25 +182,48 @@ def compute_lambda_grid(
     tF_grid = np.round(np.linspace(0.18, 0.50, 10), 2) if tF_grid is None else tF_grid
     tU_grid = np.round(np.linspace(0.30, 0.79, 10), 2) if tU_grid is None else tU_grid
 
+    if normalize_desc_for_lambda is None:
+        normalize_desc_for_lambda = normalize_desc
+    if normalize_desc_for_weights is None:
+        normalize_desc_for_weights = normalize_desc
+
     rows = []
     for protein_dir in sorted(Path(base_dir).iterdir()):
         if not protein_dir.is_dir():
             continue
 
-        df_F, df_UF, desc_cols = _load_colvar_pair(protein_dir, sample_n, rmsd_col)
-        if df_F is None:
+        df_F_w, df_UF_w, desc_cols = _load_colvar_pair(
+            protein_dir, sample_n, rmsd_col, normalize_desc=normalize_desc_for_weights
+        )
+        if df_F_w is None:
             continue
 
-        eF, cF, sF, S2F = bin_sufficient_stats(df_F, desc_cols, rmsd_col, n_bins)
-        eU, cU, sU, S2U = bin_sufficient_stats(df_UF, desc_cols, rmsd_col, n_bins)
+        if normalize_desc_for_lambda == normalize_desc_for_weights:
+            df_F_l, df_UF_l = df_F_w, df_UF_w
+        else:
+            df_F_l, df_UF_l, _ = _load_colvar_pair(
+                protein_dir, sample_n, rmsd_col, normalize_desc=normalize_desc_for_lambda
+            )
+
+        eF, cF, sF, S2F = bin_sufficient_stats(df_F_w, desc_cols, rmsd_col, n_bins)
+        eU, cU, sU, S2U = bin_sufficient_stats(df_UF_w, desc_cols, rmsd_col, n_bins)
+
+        eF_l, cF_l, sF_l, S2F_l = bin_sufficient_stats(df_F_l, desc_cols, rmsd_col, n_bins)
+        eU_l, cU_l, sU_l, S2U_l = bin_sufficient_stats(df_UF_l, desc_cols, rmsd_col, n_bins)
 
         cF_cent = centers_from_edges(eF)
         cU_cent = centers_from_edges(eU)
+        cF_cent_l = centers_from_edges(eF_l)
+        cU_cent_l = centers_from_edges(eU_l)
 
         for tF in tF_grid:
             mask_F = cF_cent <= tF
             muF, covF, nF = aggregate_moments(cF, sF, S2F, mask_F)
             if covF is None or nF < 2:
+                continue
+            mask_F_l = cF_cent_l <= tF
+            muF_l, covF_l, nF_l = aggregate_moments(cF_l, sF_l, S2F_l, mask_F_l)
+            if covF_l is None or nF_l < 2:
                 continue
 
             for tU in tU_grid:
@@ -202,6 +234,10 @@ def compute_lambda_grid(
                 muU, covU, nU = aggregate_moments(cU, sU, S2U, mask_U)
                 if covU is None or nU < 2:
                     continue
+                mask_U_l = cU_cent_l >= tU
+                muU_l, covU_l, nU_l = aggregate_moments(cU_l, sU_l, S2U_l, mask_U_l)
+                if covU_l is None or nU_l < 2:
+                    continue
 
                 kept_cols, keep_idx = prune(covF, covU, desc_cols, threshold=prune_threshold)
 
@@ -210,7 +246,13 @@ def compute_lambda_grid(
                 muU_red = muU[keep_idx]
                 covU_red = covU[np.ix_(keep_idx, keep_idx)]
 
-                weights_kept, lam = hlda_from_moments(muF_red, covF_red, muU_red, covU_red, kept_cols)
+                muF_red_l = muF_l[keep_idx]
+                covF_red_l = covF_l[np.ix_(keep_idx, keep_idx)]
+                muU_red_l = muU_l[keep_idx]
+                covU_red_l = covU_l[np.ix_(keep_idx, keep_idx)]
+
+                weights_kept, _ = hlda_from_moments(muF_red, covF_red, muU_red, covU_red, kept_cols)
+                _, lam = hlda_from_moments(muF_red_l, covF_red_l, muU_red_l, covU_red_l, kept_cols)
 
                 # simple state RMSD averages (approximate, from bin centers)
                 mean_rmsd_F = float((cF_cent[mask_F] * cF[mask_F]).sum() / cF[mask_F].sum()) if cF[mask_F].sum() else np.nan

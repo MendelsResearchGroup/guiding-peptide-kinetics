@@ -1,9 +1,10 @@
 import numpy as np
+import pandas as pd
 
 
 def _default_label(df, label_col):
     if label_col is None:
-        return df.index.astype(str)
+        return pd.Series(df.index.astype(str), index=df.index)
     return df[label_col].astype(str)
 
 
@@ -72,4 +73,3 @@ def scatter_with_labels(
                 ha="center",
                 va="bottom",
             )
-
