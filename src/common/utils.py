@@ -168,9 +168,8 @@ def compute_lambda_grid(
     n_bins: int = 200,
     rmsd_col: str = "rmsd_ca",
     prune_threshold: float = 0.93,
-    normalize_desc: bool = False,
-    normalize_desc_for_lambda: bool | None = None,
-    normalize_desc_for_weights: bool | None = None,
+    normalize_desc_for_lambda: bool = False,
+    normalize_desc_for_weights: bool = False,
 ):
     """
     Compute HLDA eigenvalues for a grid of (tF, tU) RMSD thresholds.
@@ -182,22 +181,14 @@ def compute_lambda_grid(
     tF_grid = np.round(np.linspace(0.18, 0.50, 10), 2) if tF_grid is None else tF_grid
     tU_grid = np.round(np.linspace(0.30, 0.79, 10), 2) if tU_grid is None else tU_grid
 
-    if normalize_desc_for_lambda is None:
-        normalize_desc_for_lambda = normalize_desc
-    if normalize_desc_for_weights is None:
-        normalize_desc_for_weights = normalize_desc
 
     rows = []
     for protein_dir in sorted(Path(base_dir).iterdir()):
-        if not protein_dir.is_dir():
-            continue
 
         df_F_w, df_UF_w, desc_cols = _load_colvar_pair(
             protein_dir, sample_n, rmsd_col, normalize_desc=normalize_desc_for_weights
         )
-        if df_F_w is None:
-            continue
-
+    
         if normalize_desc_for_lambda == normalize_desc_for_weights:
             df_F_l, df_UF_l = df_F_w, df_UF_w
         else:
