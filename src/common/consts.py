@@ -40,7 +40,7 @@ long_to_short = {
     "YYDPRTGTWY": "E4R",
     "YYDPYTGTWY": "E4Y", # Starts from high rmsd
     "YYKPETGTWY": "D2K",
-    "YYYPETGTWY": "D2Y",
+    "YYYPETGTWY": "D2Y", # Need to redo
     # "YYDPETGTWK": "Y9K", outlier?
     
 }

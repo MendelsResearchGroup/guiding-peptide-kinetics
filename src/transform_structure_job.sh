@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -N transform_structure
-#PBS -q  mendels_q
+#PBS -q  mendels_comb_q
 #PBS -o output.log
 #PBS -l select=2:ncpus=2:mpiprocs=2
 #PBS  -M  alexander.z@technion.ac.il
