@@ -1,19 +1,19 @@
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Iterable
+
 import numpy as np
 import pandas as pd
 
+from common.utils import _load_colvar_pair, _residues_from_desc
 
-def hlda_from_moments(muA, SA, muB, SB, desc_cols, ridge=0.0):
+
+def hlda_from_moments(muA, SA, muB, SB, desc_cols):
     muA = np.asarray(muA, float)
     muB = np.asarray(muB, float)
     SA = np.asarray(SA, float)
     SB = np.asarray(SB, float)
-
-    p = SA.shape[0]
-    if ridge > 0:
-        SA = SA + ridge * np.eye(p)
-        SB = SB + ridge * np.eye(p)
 
     d = muA - muB
 
@@ -35,27 +35,126 @@ def prune(SA, SB, desc_cols, threshold: float):
     """
     Drop highly correlated descriptors separately in folded/unfolded covariances.
     """
-    def prune_one(cov, cols):
-        keep = list(range(len(cols)))
+    def prune_one(cov):
+        keep = list(range(cov.shape[0]))
         while len(keep) > 1:
-            sub_cov = cov[np.ix_(keep, keep)]
-            std = np.sqrt(np.diag(sub_cov))
+            sub = cov[np.ix_(keep, keep)]
+            std = np.sqrt(np.diag(sub))
             denom = std[:, None] * std[None, :]
-            with np.errstate(divide="ignore", invalid="ignore"):
-                corr = np.where(denom > 0, sub_cov / denom, 0.0)
+            corr = np.where(denom > 0, sub / denom, 0.0)
+            
             np.fill_diagonal(corr, 0.0)
-            i_max, j_max = np.unravel_index(np.argmax(np.abs(corr)), corr.shape)
-            maxcorr = abs(corr[i_max, j_max])
-            if maxcorr < threshold:
+            i, j = np.unravel_index(np.argmax(np.abs(corr)), corr.shape)
+            if abs(corr[i, j]) < threshold:
                 break
-            keep.pop(j_max)
+            keep.pop(j)
         return set(keep)
 
-    keep_F = prune_one(SA, desc_cols)
-    keep_U = prune_one(SB, desc_cols)
-    keep_idx = sorted(list(keep_F & keep_U))
+    keep_F = prune_one(SA)
+    keep_U = prune_one(SB)
+    keep_idx = sorted(keep_F & keep_U)
     kept_cols = [desc_cols[i] for i in keep_idx]
     return kept_cols, keep_idx
+
+
+
+
+def compute_lambda_grid(
+    base_dir,
+    tF_grid: Iterable[float] | None = None,
+    tU_grid: Iterable[float] | None = None,
+    sample_n: int = 1_000_000,
+    n_bins: int = 200,
+    rmsd_col: str = "rmsd_ca",
+    prune_threshold: float = 0.93,
+):
+    """
+    Compute HLDA eigenvalues for a grid of (tF, tU) RMSD thresholds.
+
+    Returns a DataFrame with one row per mutant / threshold pair, including
+    the diagonal variances of folded/unfolded covariances for later Δvar
+    calculations.
+    """
+    tF_grid = np.round(np.linspace(0.18, 0.50, 10), 2) if tF_grid is None else tF_grid
+    tU_grid = np.round(np.linspace(0.30, 0.79, 10), 2) if tU_grid is None else tU_grid
+
+    rows = []
+    for protein_dir in sorted(Path(base_dir).iterdir()):
+        if not protein_dir.is_dir():
+            continue
+
+        df_F_w, df_UF_w, desc_cols = _load_colvar_pair(protein_dir, sample_n, rmsd_col)
+        if df_F_w is None:
+            continue
+
+        eF, cF, sF, S2F = bin_sufficient_stats(df_F_w, desc_cols, rmsd_col, n_bins)
+        eU, cU, sU, S2U = bin_sufficient_stats(df_UF_w, desc_cols, rmsd_col, n_bins)
+
+        cF_cent = centers_from_edges(eF)
+        cU_cent = centers_from_edges(eU)
+
+        for tF in tF_grid:
+            mask_F = cF_cent <= tF
+            muF, covF, nF = aggregate_moments(cF, sF, S2F, mask_F)
+            if covF is None or nF < 2:
+                continue
+
+            for tU in tU_grid:
+                if tU <= tF:
+                    continue
+
+                mask_U = cU_cent >= tU
+                muU, covU, nU = aggregate_moments(cU, sU, S2U, mask_U)
+                if covU is None or nU < 2:
+                    continue
+
+                kept_cols, keep_idx = prune(covF, covU, desc_cols, threshold=prune_threshold)
+
+                muF_red = muF[keep_idx]
+                covF_red = covF[np.ix_(keep_idx, keep_idx)]
+                muU_red = muU[keep_idx]
+                covU_red = covU[np.ix_(keep_idx, keep_idx)]
+
+                weights_kept, lam = hlda_from_moments(muF_red, covF_red, muU_red, covU_red, kept_cols)
+
+                full_weights = complete_weights(desc_cols, kept_cols, weights_kept, covF, covU, keep_idx)
+
+                full_weights = {k: round(v, 2) for k, v in full_weights.items()}
+                res_weight_sums = [round(v, 2) for v in _aggregate_residue_weights(full_weights)]
+
+                rows.append({
+                    "Mutant": protein_dir.name,
+                    "tF": float(tF),
+                    "tU": float(tU),
+                    "lambda": float(lam),
+                    "n_desc": len(kept_cols),
+                    "nF": nF,
+                    "nU": nU,
+                    "var_F_diag": np.diag(covF).astype(float).tolist(),
+                    "var_U_diag": np.diag(covU).astype(float).tolist(),
+                    "weights": full_weights,
+                    "res_weights": res_weight_sums,
+                })
+
+    return pd.DataFrame(rows)
+
+
+def load_lambda_grid(
+    cache_path: Path | str = Path("../data/hlda_lambda_grid.pkl"),
+    force: bool = False,
+    **kwargs,
+) -> pd.DataFrame:
+    """
+    Load the cached HLDA (tF, tU) grid or compute it if missing.
+    """
+    cache_path = Path(cache_path)
+    if cache_path.exists() and not force:
+        return pd.read_pickle(cache_path)
+
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    df = compute_lambda_grid(**kwargs)
+    df.to_pickle(cache_path)
+    return df
 
 
 def bin_sufficient_stats(df: pd.DataFrame, desc_cols: list[str], rmsd_col: str, n_bins: int):
@@ -114,9 +213,47 @@ def state_mean(series: pd.Series, mask: pd.Series):
     return float(series.loc[mask].mean()) if mask.any() else np.nan
 
 
+def complete_weights(desc_cols, kept_cols, weights_kept, covF, covU, keep_idx):
+    """
+    Extend weights to dropped descriptors by mapping each dropped descriptor
+    to the kept descriptor with the strongest correlation.
+    """
+    full_weights = {name: float(w) for name, w in weights_kept.items()}
+
+    stdF_full = np.sqrt(np.diag(covF))
+    stdU_full = np.sqrt(np.diag(covU))
+    stdF_kept = stdF_full[keep_idx]
+    stdU_kept = stdU_full[keep_idx]
+    for j, desc in enumerate(desc_cols):
+        if j in keep_idx:
+            continue
+        denomF = stdF_full[j] * stdF_kept
+        denomU = stdU_full[j] * stdU_kept
+
+        corrF = np.where(denomF > 0, covF[j, keep_idx] / denomF, 0.0)
+        corrU = np.where(denomU > 0, covU[j, keep_idx] / denomU, 0.0)
+        abs_comb = np.maximum(np.abs(corrF), np.abs(corrU))
+        best = np.nanargmax(abs_comb)
+        mapped_desc = kept_cols[best]
+        full_weights[desc] = float(weights_kept.get(mapped_desc, 0.0))
+
+    return full_weights
+
+def _aggregate_residue_weights(weights: dict[str, float], max_res: int = 9) -> list[float]:
+    """
+    Sum absolute weights per residue index.
+    """
+    agg = np.zeros(max_res + 1, float)
+    for desc, w in weights.items():
+        for res_idx in _residues_from_desc(desc):
+            if 0 <= res_idx <= max_res:
+                agg[res_idx] += abs(float(w))
+    return agg.tolist()
+
 __all__ = [
     "hlda_from_moments",
     "prune",
+    "complete_weights",
     "bin_sufficient_stats",
     "aggregate_moments",
     "centers_from_edges",

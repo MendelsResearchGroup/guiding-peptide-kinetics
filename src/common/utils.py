@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Iterable
 
 from scipy import optimize, stats
 import numpy as np
@@ -13,14 +12,6 @@ from common.consts import (
     short_to_medium,
     proteins,
 )
-from common.hlda_utils import (
-    aggregate_moments,
-    bin_sufficient_stats,
-    centers_from_edges,
-    hlda_from_moments,
-    prune,
-)
-import re
 import re
 
 def obtainEstimationsDataFrame(samples, minSampleSize):
@@ -112,7 +103,7 @@ def _mean_abs_diff(a: np.ndarray | None, b: np.ndarray | None) -> float:
     return float(np.nanmean(np.abs(a[:n] - b[:n])))
 
 
-def _load_colvar_pair(base_dir: Path, sample_n: int, rmsd_col: str, normalize_desc: bool = False):
+def _load_colvar_pair(base_dir: Path, sample_n: int, rmsd_col: str):
     f_path = base_dir / "COLVAR_CV_F"
     uf_path = base_dir / "COLVAR_CV_UF"
     if not (f_path.exists() and uf_path.exists()):
@@ -126,12 +117,6 @@ def _load_colvar_pair(base_dir: Path, sample_n: int, rmsd_col: str, normalize_de
     usecols = desc_cols + [rmsd_col]
     df_F = load_colvar(f_path, usecols, sample_n)
     df_UF = load_colvar(uf_path, usecols, sample_n)
-    if normalize_desc:
-        pooled = pd.concat([df_F[desc_cols], df_UF[desc_cols]], axis=0)
-        mean = pooled.mean()
-        std = pooled.std(ddof=0)
-        df_F[desc_cols] = (df_F[desc_cols] - mean) / std
-        df_UF[desc_cols] = (df_UF[desc_cols] - mean) / std
     return df_F, df_UF, desc_cols
 
 
@@ -145,175 +130,6 @@ def _residues_from_desc(desc: str) -> list[int]:
         return []
     digits = m.group(1)
     return [int(ch) for ch in digits]
-
-
-def _aggregate_residue_weights(weights: dict[str, float], max_res: int = 9) -> list[float]:
-    """
-    Sum absolute weights per residue index.
-    """
-    agg = np.zeros(max_res + 1, float)
-    for desc, w in weights.items():
-        for res_idx in _residues_from_desc(desc):
-            if 0 <= res_idx <= max_res:
-                agg[res_idx] += abs(float(w))
-    return agg.tolist()
-
-
-
-def compute_lambda_grid(
-    base_dir: Path = _DATA_DIR / "traj",
-    tF_grid: Iterable[float] | None = None,
-    tU_grid: Iterable[float] | None = None,
-    sample_n: int = 1_000_000,
-    n_bins: int = 200,
-    rmsd_col: str = "rmsd_ca",
-    prune_threshold: float = 0.93,
-    normalize_desc_for_lambda: bool = False,
-    normalize_desc_for_weights: bool = False,
-):
-    """
-    Compute HLDA eigenvalues for a grid of (tF, tU) RMSD thresholds.
-
-    Returns a DataFrame with one row per mutant / threshold pair, including
-    the diagonal variances of folded/unfolded covariances for later Δvar
-    calculations.
-    """
-    tF_grid = np.round(np.linspace(0.18, 0.50, 10), 2) if tF_grid is None else tF_grid
-    tU_grid = np.round(np.linspace(0.30, 0.79, 10), 2) if tU_grid is None else tU_grid
-
-
-    rows = []
-    for protein_dir in sorted(Path(base_dir).iterdir()):
-
-        df_F_w, df_UF_w, desc_cols = _load_colvar_pair(
-            protein_dir, sample_n, rmsd_col, normalize_desc=normalize_desc_for_weights
-        )
-    
-        if normalize_desc_for_lambda == normalize_desc_for_weights:
-            df_F_l, df_UF_l = df_F_w, df_UF_w
-        else:
-            df_F_l, df_UF_l, _ = _load_colvar_pair(
-                protein_dir, sample_n, rmsd_col, normalize_desc=normalize_desc_for_lambda
-            )
-
-        eF, cF, sF, S2F = bin_sufficient_stats(df_F_w, desc_cols, rmsd_col, n_bins)
-        eU, cU, sU, S2U = bin_sufficient_stats(df_UF_w, desc_cols, rmsd_col, n_bins)
-
-        eF_l, cF_l, sF_l, S2F_l = bin_sufficient_stats(df_F_l, desc_cols, rmsd_col, n_bins)
-        eU_l, cU_l, sU_l, S2U_l = bin_sufficient_stats(df_UF_l, desc_cols, rmsd_col, n_bins)
-
-        cF_cent = centers_from_edges(eF)
-        cU_cent = centers_from_edges(eU)
-        cF_cent_l = centers_from_edges(eF_l)
-        cU_cent_l = centers_from_edges(eU_l)
-
-        for tF in tF_grid:
-            mask_F = cF_cent <= tF
-            muF, covF, nF = aggregate_moments(cF, sF, S2F, mask_F)
-            if covF is None or nF < 2:
-                continue
-            mask_F_l = cF_cent_l <= tF
-            muF_l, covF_l, nF_l = aggregate_moments(cF_l, sF_l, S2F_l, mask_F_l)
-            if covF_l is None or nF_l < 2:
-                continue
-
-            for tU in tU_grid:
-                if tU <= tF:
-                    continue
-
-                mask_U = cU_cent >= tU
-                muU, covU, nU = aggregate_moments(cU, sU, S2U, mask_U)
-                if covU is None or nU < 2:
-                    continue
-                mask_U_l = cU_cent_l >= tU
-                muU_l, covU_l, nU_l = aggregate_moments(cU_l, sU_l, S2U_l, mask_U_l)
-                if covU_l is None or nU_l < 2:
-                    continue
-
-                kept_cols, keep_idx = prune(covF, covU, desc_cols, threshold=prune_threshold)
-
-                muF_red = muF[keep_idx]
-                covF_red = covF[np.ix_(keep_idx, keep_idx)]
-                muU_red = muU[keep_idx]
-                covU_red = covU[np.ix_(keep_idx, keep_idx)]
-
-                muF_red_l = muF_l[keep_idx]
-                covF_red_l = covF_l[np.ix_(keep_idx, keep_idx)]
-                muU_red_l = muU_l[keep_idx]
-                covU_red_l = covU_l[np.ix_(keep_idx, keep_idx)]
-
-                weights_kept, _ = hlda_from_moments(muF_red, covF_red, muU_red, covU_red, kept_cols)
-                _, lam = hlda_from_moments(muF_red_l, covF_red_l, muU_red_l, covU_red_l, kept_cols)
-
-                # simple state RMSD averages (approximate, from bin centers)
-                mean_rmsd_F = float((cF_cent[mask_F] * cF[mask_F]).sum() / cF[mask_F].sum()) if cF[mask_F].sum() else np.nan
-                mean_rmsd_U = float((cU_cent[mask_U] * cU[mask_U]).sum() / cU[mask_U].sum()) if cU[mask_U].sum() else np.nan
-
-                # Extend weights to all descriptors by mapping dropped descriptors
-                # to the kept descriptor with which they are most correlated (folded cov).
-                full_weights = {}
-                # weights for kept descriptors
-                for name, w in weights_kept.items():
-                    full_weights[name] = float(w)
-
-                stdF_full = np.sqrt(np.diag(covF))
-                stdU_full = np.sqrt(np.diag(covU))
-                stdF_kept = stdF_full[keep_idx]
-                stdU_kept = stdU_full[keep_idx]
-                for j, desc in enumerate(desc_cols):
-                    if j in keep_idx:
-                        continue
-                    denomF = stdF_full[j] * stdF_kept
-                    denomU = stdU_full[j] * stdU_kept
-                    with np.errstate(divide="ignore", invalid="ignore"):
-                        corrF = np.where(denomF > 0, covF[j, keep_idx] / denomF, 0.0)
-                        corrU = np.where(denomU > 0, covU[j, keep_idx] / denomU, 0.0)
-                    if corrF.size == 0 or (np.all(~np.isfinite(corrF)) and np.all(~np.isfinite(corrU))):
-                        continue
-                    abs_comb = np.maximum(np.abs(corrF), np.abs(corrU))
-                    best = np.nanargmax(abs_comb)
-                    mapped_desc = kept_cols[best]
-                    full_weights[desc] = float(weights_kept.get(mapped_desc, 0.0))
-
-                full_weights = {k: round(v, 2) for k, v in full_weights.items()}
-                res_weight_sums = [round(v, 2) for v in _aggregate_residue_weights(full_weights)]
-
-                rows.append({
-                    "Mutant": protein_dir.name,
-                    "tF": float(tF),
-                    "tU": float(tU),
-                    "lambda": float(lam),
-                    "n_desc": len(kept_cols),
-                    "nF": nF,
-                    "nU": nU,
-                    "var_F_diag": np.diag(covF).astype(float).tolist(),
-                    "var_U_diag": np.diag(covU).astype(float).tolist(),
-                    "mean_rmsd_F": mean_rmsd_F,
-                    "mean_rmsd_U": mean_rmsd_U,
-                    "weights": full_weights,
-                    "res_weights": res_weight_sums,
-                })
-
-    return pd.DataFrame(rows)
-
-
-def load_lambda_grid(
-    cache_path: Path | str = Path("../data/hlda_lambda_grid.pkl"),
-    force: bool = False,
-    **kwargs,
-) -> pd.DataFrame:
-    """
-    Load the cached HLDA (tF, tU) grid or compute it if missing.
-    """
-    cache_path = Path(cache_path)
-    if cache_path.exists() and not force:
-        return pd.read_pickle(cache_path)
-
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
-    df = compute_lambda_grid(**kwargs)
-    df.to_pickle(cache_path)
-    return df
-
 
 def collect_df(
     all_mfpt,
@@ -388,6 +204,8 @@ def collect_df(
 
         abs_dvar_F_sum = float(np.nansum(np.abs(varF - wt_vars_F)))
         abs_dvar_U_sum = float(np.nansum(np.abs(varU - wt_vars_U)))
+        rel_dvar_F_sum = float(np.nansum(np.abs(varF - wt_vars_F) / wt_vars_F))
+        rel_dvar_U_sum = float(np.nansum(np.abs(varU - wt_vars_U) / wt_vars_U))
 
         res_weights = lam_row["res_weights"]
         res_weight_cols = {
@@ -404,12 +222,10 @@ def collect_df(
             "tU": tU,
             "mfpt": mfpt,
             "lim": lim,
-            "abs_dvar_F": _mean_abs_diff(varF, wt_vars_F),
-            "abs_dvar_U": _mean_abs_diff(varU, wt_vars_U),
-            "abs_dvar_mean": np.nanmean([_mean_abs_diff(varF, wt_vars_F), _mean_abs_diff(varU, wt_vars_U)]),
-            "abs_dvar_F_sum": abs_dvar_F_sum,
-            "abs_dvar_U_sum": abs_dvar_U_sum,
-            "abs_dvar_sum_mean": np.nanmean([abs_dvar_F_sum, abs_dvar_U_sum]),
+            "abs_dvar_F": abs_dvar_F_sum,
+            "abs_dvar_U": abs_dvar_U_sum,
+            "rel_dvar_F": rel_dvar_F_sum,
+            "rel_dvar_U": rel_dvar_U_sum,
             "residue_idx": short_to_residue.get(short),
             "property_grp": short_to_property.get(short),
             "Tm": Tm["Tm"].get(short),
