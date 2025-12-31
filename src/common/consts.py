@@ -18,7 +18,7 @@ long_to_short = {
     "YYDPETGTWV": "Y9V",
     "YYDPETGTWA": "Y9A",
     "YYDPETGVWY": "T7V",
-    # "YYDPETGQWY": "T7Q", # Not enough grid size
+    "YYDPETGQWY": "T7Q", # Not enough grid size
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
