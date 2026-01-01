@@ -5,7 +5,7 @@ long_to_short = {
     "chignolin":  "WT",
     "YYAPETGTWY": "D2A",
     "YYCPETGTWY": "D2C",
-    "YYMPETGTWY": "D2M",
+    "YYMPETGTWY": "D2M", # Might be stupid
     "YYNPETGTWY": "D2N",
     "YYRPETGTWY": "D2R",
     "YYEPETGTWY": "D2E",
@@ -18,7 +18,7 @@ long_to_short = {
     "YYDPETGTWV": "Y9V",
     "YYDPETGTWA": "Y9A",
     "YYDPETGVWY": "T7V",
-    "YYDPETGQWY": "T7Q", # Not enough grid size
+    "YYDPETGQWY": "T7Q",
     "YYDPETGRWY": "T7R",
     "YYDPETGYWY": "T7Y",
     "YYDPETGGWY": "T7G",
@@ -33,15 +33,15 @@ long_to_short = {
     "YYDCETGTWY": "P3C",
     "YYDPERGTWY": "T5R",
     "YYDPEGGTWY": "T5G",
-    "YYDPEYGTWY": "T5Y", # Not yet sampled
-    "YYDPEDGTWY": "T5D", # Not yet sampled
+    "YYDPEYGTWY": "T5Y", 
+    "YYDPEDGTWY": "T5D", 
     "YYDPATGTWY": "E4A",
     "YYDPGTGTWY": "E4G",
     "YYDPRTGTWY": "E4R",
-    "YYDPYTGTWY": "E4Y", # Starts from high rmsd
-    "YYKPETGTWY": "D2K",
-    "YYYPETGTWY": "D2Y", # Need to redo
-    # "YYDPETGTWK": "Y9K", outlier?
+    "YYDPYTGTWY": "E4Y", 
+    "YYKPETGTWY": "D2K", # Might be stupid
+    "YYYPETGTWY": "D2Y",
+    "YYDPETGTWK": "Y9K" 
     
 }
 
