@@ -80,13 +80,9 @@ def compute_lambda_grid(
 
     rows = []
     for protein_dir in sorted(Path(base_dir).iterdir()):
-        if not protein_dir.is_dir():
-            continue
 
         df_F_w, df_UF_w, desc_cols = _load_colvar_pair(protein_dir, sample_n, rmsd_col)
-        if df_F_w is None:
-            continue
-
+        
         eF, cF, sF, S2F = bin_sufficient_stats(df_F_w, desc_cols, rmsd_col, n_bins)
         eU, cU, sU, S2U = bin_sufficient_stats(df_UF_w, desc_cols, rmsd_col, n_bins)
 

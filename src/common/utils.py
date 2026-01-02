@@ -106,13 +106,9 @@ def _mean_abs_diff(a: np.ndarray | None, b: np.ndarray | None) -> float:
 def _load_colvar_pair(base_dir: Path, sample_n: int, rmsd_col: str):
     f_path = base_dir / "COLVAR_CV_F"
     uf_path = base_dir / "COLVAR_CV_UF"
-    if not (f_path.exists() and uf_path.exists()):
-        return None, None, None
 
     names = read_colvar_header_names(f_path)
     desc_cols = [c for c in names if c.startswith("d")]
-    if rmsd_col not in names:
-        return None, None, None
 
     usecols = desc_cols + [rmsd_col]
     df_F = load_colvar(f_path, usecols, sample_n)
