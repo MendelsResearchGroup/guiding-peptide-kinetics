@@ -127,6 +127,18 @@ def _residues_from_desc(desc: str) -> list[int]:
     digits = m.group(1)
     return [int(ch) for ch in digits]
 
+
+def _aggregate_residue_weights(weights: dict[str, float], max_res: int = 9) -> list[float]:
+    """
+    Sum absolute weights per residue index.
+    """
+    agg = np.zeros(max_res + 1, float)
+    for desc, w in weights.items():
+        for res_idx in _residues_from_desc(desc):
+            if 0 <= res_idx <= max_res:
+                agg[res_idx] += abs(float(w))
+    return agg.tolist()
+
 def collect_df(
     all_mfpt,
     mfpt_threshold: float,

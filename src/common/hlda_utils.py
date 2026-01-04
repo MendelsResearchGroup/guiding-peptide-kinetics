@@ -6,7 +6,7 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
-from common.utils import _load_colvar_pair, _residues_from_desc
+from common.utils import _load_colvar_pair, _aggregate_residue_weights
 
 
 def hlda_from_moments(muA, SA, muB, SB, desc_cols):
@@ -25,15 +25,15 @@ def hlda_from_moments(muA, SA, muB, SB, desc_cols):
     lam = float(np.real(eigvals[idx]))
     w = np.real(eigvecs[:, idx])
 
-    Sw = np.linalg.inv(Sw_inv)
-    w = w / np.sqrt(float(w.T @ Sw @ w))
+    # Sw = np.linalg.inv(Sw_inv)
+    # w = w / np.sqrt(float(w.T @ Sw @ w))
 
     return pd.Series(w, index=desc_cols), lam
 
 
-def prune(SA, SB, desc_cols, threshold: float):
+def prune(cov_pooled, desc_cols, threshold: float):
     """
-    Drop highly correlated descriptors separately in folded/unfolded covariances.
+    Drop highly correlated descriptors using a pooled covariance (folded + unfolded).
     """
     def prune_one(cov):
         keep = list(range(cov.shape[0]))
@@ -50,9 +50,7 @@ def prune(SA, SB, desc_cols, threshold: float):
             keep.pop(j)
         return set(keep)
 
-    keep_F = prune_one(SA)
-    keep_U = prune_one(SB)
-    keep_idx = sorted(keep_F & keep_U)
+    keep_idx = sorted(prune_one(cov_pooled))
     kept_cols = [desc_cols[i] for i in keep_idx]
     return kept_cols, keep_idx
 
@@ -82,6 +80,10 @@ def compute_lambda_grid(
     for protein_dir in sorted(Path(base_dir).iterdir()):
 
         df_F_w, df_UF_w, desc_cols = _load_colvar_pair(protein_dir, sample_n, rmsd_col)
+        X_F = df_F_w[desc_cols].to_numpy()
+        X_U = df_UF_w[desc_cols].to_numpy()
+        rmsd_F = df_F_w[rmsd_col].to_numpy()
+        rmsd_U = df_UF_w[rmsd_col].to_numpy()
         
         eF, cF, sF, S2F = bin_sufficient_stats(df_F_w, desc_cols, rmsd_col, n_bins)
         eU, cU, sU, S2U = bin_sufficient_stats(df_UF_w, desc_cols, rmsd_col, n_bins)
@@ -104,7 +106,9 @@ def compute_lambda_grid(
                 if covU is None or nU < 2:
                     continue
 
-                kept_cols, keep_idx = prune(covF, covU, desc_cols, threshold=prune_threshold)
+                pooled = np.vstack([X_F[rmsd_F <= tF], X_U[rmsd_U >= tU]])
+                cov_pooled = np.cov(pooled, rowvar=False, ddof=1)
+                kept_cols, keep_idx = prune(cov_pooled, desc_cols, threshold=prune_threshold)
 
                 muF_red = muF[keep_idx]
                 covF_red = covF[np.ix_(keep_idx, keep_idx)]
@@ -234,17 +238,6 @@ def complete_weights(desc_cols, kept_cols, weights_kept, covF, covU, keep_idx):
         full_weights[desc] = float(weights_kept.get(mapped_desc, 0.0))
 
     return full_weights
-
-def _aggregate_residue_weights(weights: dict[str, float], max_res: int = 9) -> list[float]:
-    """
-    Sum absolute weights per residue index.
-    """
-    agg = np.zeros(max_res + 1, float)
-    for desc, w in weights.items():
-        for res_idx in _residues_from_desc(desc):
-            if 0 <= res_idx <= max_res:
-                agg[res_idx] += abs(float(w))
-    return agg.tolist()
 
 __all__ = [
     "hlda_from_moments",
