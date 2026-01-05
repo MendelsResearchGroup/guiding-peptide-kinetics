@@ -72,6 +72,13 @@ if [ -n "$STRETCH_CPI" ]; then
     stretch_cpi_args=(-cpi "$STRETCH_CPI")
 fi
 
+stretch_noappend_args=()
+if [ "${STRETCH_NOAPPEND:-auto}" = "auto" ] && [ -n "$STRETCH_CPI" ] && [ "$STRETCH_DEFFNM" != "md" ]; then
+    stretch_noappend_args=(-noappend)
+elif [ "${STRETCH_NOAPPEND:-}" = "true" ]; then
+    stretch_noappend_args=(-noappend)
+fi
+
 uf_cpi_args=()
 if [ -n "$UF_CPI" ]; then
     uf_cpi_args=(-cpi "$UF_CPI")
@@ -94,7 +101,7 @@ fi
     printf "${YELLOW}\n---------- [Stretch protein] ----------${NC}\n"
     $GMX_CMD mdrun $STRETCH_MDRUN_FLAGS -v \
         -s "$STRETCH_TPR" -deffnm "$STRETCH_DEFFNM" -nsteps "$STRETCH_NSTEPS" \
-        -plumed "$PLUMED_STRETCH" "${stretch_cpi_args[@]}"
+        -plumed "$PLUMED_STRETCH" "${stretch_cpi_args[@]}" "${stretch_noappend_args[@]}"
 
     # printf "${CYAN}\n---------- [MD simulation] ----------${NC}\n"
     $GMX_CMD mdrun $MD_MDRUN_FLAGS -v \
