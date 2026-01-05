@@ -84,6 +84,13 @@ if [ -n "$UF_CPI" ]; then
     uf_cpi_args=(-cpi "$UF_CPI")
 fi
 
+uf_noappend_args=()
+if [ "${UF_NOAPPEND:-auto}" = "auto" ] && [ -n "$UF_CPI" ] && [ "$UF_DEFFNM" != "$STRETCH_DEFFNM" ]; then
+    uf_noappend_args=(-noappend)
+elif [ "${UF_NOAPPEND:-}" = "true" ]; then
+    uf_noappend_args=(-noappend)
+fi
+
 uf_plumed_args=()
 if [ -n "$UF_PLUMED" ]; then
     uf_plumed_args=(-plumed "$UF_PLUMED")
@@ -106,7 +113,7 @@ fi
     # printf "${CYAN}\n---------- [MD simulation] ----------${NC}\n"
     $GMX_CMD mdrun $MD_MDRUN_FLAGS -v \
         -s "$UF_TPR" -deffnm "$UF_DEFFNM" -nsteps "$MD_NSTEPS" \
-        "${uf_plumed_args[@]}" "${uf_cpi_args[@]}"
+        "${uf_plumed_args[@]}" "${uf_cpi_args[@]}" "${uf_noappend_args[@]}"
     if [ -f COLVAR ]; then
         mv COLVAR COLVAR_FLAT
     fi
