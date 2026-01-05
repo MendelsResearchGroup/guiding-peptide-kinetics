@@ -1,11 +1,11 @@
 # protein-toolkit
 
-Toolkit for orchestrating GROMACS + PLUMED simulations aimed at extracting Harmonic Linear Discriminant Analysis (HLDA) collective variables for chignolin and its mutants. The repository couples structure preparation, equilibration, production, stretching, HLDA-biased replicas, and downstream analysis into reproducible shell scripts and notebooks that run on a workstation or an HPC cluster.
+Toolkit for orchestrating GROMACS + PLUMED simulations aimed at extracting Harmonic Linear Discriminant Analysis (HLDA) collective variables for WT and its mutants. The repository couples structure preparation, equilibration, production, stretching, HLDA-biased replicas, and downstream analysis into reproducible shell scripts and notebooks that run on a workstation or an HPC cluster.
 
 ## Highlights
 
 - Single-command wrappers around common GROMACS workflows (`transform_structure.sh`, `nvt_npt.sh`, `base_run.sh`, `stretch_run.sh`, `fpt_single_run.sh`).
-- Matching PBS job scripts for running the same steps on a scheduler (`*_job.sh`).
+- PBS-ready scripts that auto-detect scheduler runs (same `*.sh` files work locally or via `qsub`).
 - Ready-to-use PLUMED inputs (`src/plumed/*.dat`, `src/fpt_plumed/*.dat`) and MDP files (`data/*.mdp`).
 - Python utilities and notebooks for HLDA projections, kinetics (STiMetaD), and figure generation.
 
@@ -17,14 +17,13 @@ Toolkit for orchestrating GROMACS + PLUMED simulations aimed at extracting H
   conda env create -f environment.yml
   conda activate protein-fes
   ```
-- Optional: **PBS-compatible cluster** if you plan to submit the job scripts found under `src/*_job.sh`.
+- Optional: **PBS-compatible cluster** if you plan to submit the scripts via `qsub`.
 
 ## Repository layout
 
 | Path | Purpose |
 | ---- | ------- |
-| `src/*.sh` | Driver scripts for each MD stage (workstation-friendly). |
-| `src/*_job.sh` | PBS batch equivalents that expect `BASE=<protein_id>` in the job environment. |
+| `src/*.sh` | Driver scripts for each MD stage (workstation + PBS aware). |
 | `src/common/` | Shared settings (`config.sh`) and Python helpers (`utils.py`, `consts.py`). |
 | `src/plumed/` | PLUMED inputs used during transform, stretch, and HLDA-biased runs. |
 | `src/fpt_plumed/` | PLUMED templates for multi-replica first-passage-time (FPT) runs. |
@@ -79,9 +78,9 @@ The preparation scripts create `OUTPUT_DIR` on demand and populate it with the G
      (`hlda_run.sh` expects `BASE` to be exported so it can source `config.sh`.)
    - For replica FPT studies, use `src/fpt_single_run.sh`. Example:
      ```bash
-     ./src/fpt_single_run.sh 0 YYDPETGTWE --force
+     ./src/fpt_single_run.sh 0 Y9E --force
      ```
-     The helper script `src/fpt_run.sh` demonstrates how to launch 50 replicas (hard-coded for `YYDPETGTWE`) with five concurrent jobs; adapt the protein identifier or write your own launcher if needed. Each replica writes to `data/<protein_id>/output/run_<ID>/`.
+     The helper script `src/fpt_run.sh` demonstrates how to launch 50 replicas (hard-coded for `Y9E`) with five concurrent jobs; adapt the protein identifier or write your own launcher if needed. Each replica writes to `data/<protein_id>/output/run_<ID>/`.
 
 6. **Compute HLDA coefficients and kinetics**
    - Use the notebooks under `src/` (`hlda.ipynb`, `weights.ipynb`, `fpt.ipynb`, `STiMetaD.py`) to:
@@ -95,21 +94,21 @@ The preparation scripts create `OUTPUT_DIR` on demand and populate it with the G
 
 ## Running on a cluster
 
-Each `*_job.sh` mirrors its workstation counterpart but uses `gmx_mpi`, enforces `set -e`, and includes PBS directives. To submit on a PBS scheduler:
+Each `*.sh` script includes PBS directives and auto-switches to `gmx_mpi` when run under `qsub`. To submit on a PBS scheduler:
 
 ```bash
-BASE=<protein_id> qsub src/transform_structure_job.sh
-BASE=<protein_id> qsub src/nvt_npt_job.sh
-BASE=<protein_id> qsub src/base_run_job.sh
-BASE=<protein_id> qsub src/stretch_run_job.sh
+BASE=<protein_id> qsub src/transform_structure.sh
+BASE=<protein_id> qsub src/nvt_npt.sh
+BASE=<protein_id> qsub src/base_run.sh
+BASE=<protein_id> qsub src/stretch_run.sh
 ```
 
-Adjust queue, resource requests, and email notifications to match your cluster policy. The job scripts assume the repository lives at `$HOME/work/protein-toolkit`—update `PBS_O_WORKDIR` if needed.
+Adjust queue, resource requests, and email notifications to match your cluster policy. The scripts assume the repository lives at `$HOME/work/protein-toolkit` when submitted unless `REPO_ROOT` is set.
 
 ## Data and analysis assets
 
 - `data/*.mdp`: CHARMM-based parameter files used by the scripts.
-- `data/*.csv`: Precomputed descriptors (averages, variances, eigenvalues) for chignolin mutants. Used by the HLDA and kinetics notebooks.
+- `data/*.csv`: Precomputed descriptors (averages, variances, eigenvalues) for WT mutants. Used by the HLDA and kinetics notebooks.
 - `data/mfpt*.pkl`: Serialized MFPT collections organised by temperature thresholds.
 - `src/common/consts.py`: Maps mutant identifiers to residue-level annotations and grouping colours used in plots.
 - `src/STiMetaD.py`: Standalone implementation of the STiMetaD estimator (also exposed through the notebooks).

@@ -1,12 +1,36 @@
 #!/usr/bin/env bash
+#PBS -N fpt_run
+#PBS -q  mendels_comb_q
+#PBS -o output.log
+#PBS -l select=1:ncpus=4:mpiprocs=4
+#PBS  -M  alexander.z@technion.ac.il
 #
 # Usage:
-#   ./fpt_run.sh <ID> <PROTEIN> [--force]
+#   ./fpt_single_run.sh <ID> <PROTEIN> [--force]
 # Example:
-#   ./fpt_run.sh 7 chignolin           # writes to data/output/chignolin/run_007/
-#   ./fpt_run.sh 7 chignolin --force   # overwrite if already exists
+#   ./fpt_single_run.sh 7 chignolin           # writes to data/chignolin/output/run_007/
+#   ./fpt_single_run.sh 7 chignolin --force   # overwrite if already exists
 #
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT_DEFAULT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [ -n "${PBS_JOBID:-}" ]; then
+    source ~/.bashrc
+    conda activate gmx-plumed
+    REPO_ROOT=${REPO_ROOT:-${PBS_O_WORKDIR:-$HOME/work/protein-toolkit}}
+    GMX_CMD=${GMX_CMD:-gmx_mpi}
+    FORCE_DEFAULT=true
+    NSTEPS_DEFAULT=50000000
+else
+    REPO_ROOT=${REPO_ROOT:-$REPO_ROOT_DEFAULT}
+    GMX_CMD=${GMX_CMD:-gmx}
+    FORCE_DEFAULT=false
+    NSTEPS_DEFAULT=3000000
+fi
+
+cd "$REPO_ROOT"
 
 # ------------------ constants ------------------
 MDP="md-charmm.mdp"
@@ -14,22 +38,39 @@ GRO="npt.gro"
 CPT="npt.cpt"
 TOP="topol.top"
 REF="reference.pdb"
-PLUMED_TEMPLATE="src/fpt_plumed.dat"
-NSTEPS=3000000
 
 # ------------------ parse args ------------------
-if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 <ID> <PROTEIN> [--force]" >&2
+if [[ $# -ge 2 ]]; then
+    RUN_ID_RAW="$1"
+    PROTEIN="$2"
+elif [[ -n "${ID:-}" && ( -n "${PROTEIN:-}" || -n "${BASE:-}" ) ]]; then
+    RUN_ID_RAW="$ID"
+    PROTEIN="${PROTEIN:-$BASE}"
+else
+    echo "Usage: $0 <ID> <PROTEIN> [--force] or export ID/PROTEIN (or BASE)" >&2
     exit 1
 fi
 
-RUN_ID=$(printf "%03d" "$1")
-PROTEIN="$2"
+RUN_ID=$(printf "%03d" "$RUN_ID_RAW")
 BASE="$PROTEIN"
 
-source "$(dirname "$0")/common/config.sh"
+source "$REPO_ROOT/src/common/config.sh"
 
-FORCE=false && [[ ${3:-} =~ ^(-f|--force)$ ]] && FORCE=true
+FORCE=${FORCE:-$FORCE_DEFAULT}
+if [[ ${3:-} =~ ^(-f|--force)$ ]]; then
+    FORCE=true
+fi
+
+NSTEPS=${NSTEPS:-$NSTEPS_DEFAULT}
+PLUMED_BASE=${PLUMED_BASE:-"$REPO_ROOT/src/fpt_plumed/base.dat"}
+PLUMED_TEMPLATE=${PLUMED_TEMPLATE:-"$REPO_ROOT/src/fpt_plumed/${PROTEIN}.dat"}
+if [ -z "${MDRUN_FLAGS:-}" ]; then
+    if [ -n "${PBS_JOBID:-}" ]; then
+        MDRUN_FLAGS=""
+    else
+        MDRUN_FLAGS="-ntmpi 1 -ntomp 6 -nb gpu -pme gpu"
+    fi
+fi
 
 DEFFNM="run_${RUN_ID}"
 RUN_DIR="run_${RUN_ID}"
@@ -49,21 +90,30 @@ PLUMED="${DEFFNM}_plumed.dat"
     fi
 
     mkdir -p "$RUN_DIR"
-    cp "../../$MDP" "$GRO" "$TOP" "$CPT" "$REF" "$RUN_DIR/"
+    cp "$REPO_ROOT/data/$MDP" "$OUTPUT_DIR/$GRO" "$OUTPUT_DIR/$TOP" \
+        "$OUTPUT_DIR/$CPT" "$REPO_ROOT/data/$BASE/$REF" "$RUN_DIR/"
 
-    sed "s/__ID__/${RUN_ID}/g" "../../../$PLUMED_TEMPLATE" >"$RUN_DIR/$PLUMED"
+    if [ -f "$PLUMED_BASE" ]; then
+        cp "$PLUMED_BASE" "$RUN_DIR/"
+    fi
+
+    if [ ! -f "$PLUMED_TEMPLATE" ]; then
+        echo "Plumed template not found: $PLUMED_TEMPLATE" >&2
+        exit 1
+    fi
+    sed "s/__ID__/${RUN_ID}/g" "$PLUMED_TEMPLATE" >"$RUN_DIR/$PLUMED"
 
     # ------------------ GROMACS run ------------------
     cd "$RUN_DIR"
 
     printf "\n${CYAN}>> [grompp] Generating TPR: $TPR${NC}\n"
-    gmx_mpi grompp -f "$MDP" -c "$GRO" -t "$CPT" -p "$TOP" -o "$TPR"
+    $GMX_CMD grompp -f "$MDP" -c "$GRO" -t "$CPT" -p "$TOP" -o "$TPR"
 
     printf "\n${YELLOW}>> [mdrun] Starting MD with HLDA bias${NC}\n"
     if [[ "$FORCE" == true || ! -f ${DEFFNM}.edr ]]; then
-        gmx_mpi mdrun -ntmpi 1 -ntomp 6 -v \
-            -deffnm "$DEFFNM" -nsteps $NSTEPS \
-            -nb gpu -pme gpu --plumed "$PLUMED"
+        $GMX_CMD mdrun $MDRUN_FLAGS -v \
+            -deffnm "$DEFFNM" -nsteps "$NSTEPS" \
+            --plumed "$PLUMED"
     else
         echo "${DEFFNM}.edr exists – skipping mdrun"
     fi
@@ -71,7 +121,7 @@ PLUMED="${DEFFNM}_plumed.dat"
     # ------------------ Center the protein ------------------
     if [[ -f ${DEFFNM}.xtc && -f ${DEFFNM}.tpr ]]; then
         printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
-        printf "1\n1\n" | gmx_mpi trjconv -s "${DEFFNM}.tpr" -f "${DEFFNM}.xtc" \
+        printf "1\n1\n" | $GMX_CMD trjconv -s "${DEFFNM}.tpr" -f "${DEFFNM}.xtc" \
             -o "${DEFFNM}_center.xtc" -center -pbc mol
     else
         echo "Warning: Cannot center – missing ${DEFFNM}.xtc or ${DEFFNM}.tpr"
