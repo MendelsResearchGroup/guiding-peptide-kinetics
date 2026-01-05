@@ -11,6 +11,7 @@ __pycache__/
 fpt_run.*
 transform_structure.*
 nvt_npt.*
+folded_unfolded.*
 # Distribution / packaging
 .Python
 build/

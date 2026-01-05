@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -N folded_unfolded
-#PBS -q  mendels_q
+#PBS -q  mendels_comb_q
 #PBS -o output.log
 #PBS -l select=2:ncpus=4:mpiprocs=4
 #PBS  -M  alexander.z@technion.ac.il

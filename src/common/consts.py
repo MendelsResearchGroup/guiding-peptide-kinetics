@@ -100,7 +100,7 @@ groupByProperty = {
     "AVILMFYW": ["D2A", "D2M", "Y9A", "Y9V", "T7V", "T7Y", "Y0A"],
 }
 
-proteins = list(long_to_short.keys())
+proteins = list(long_to_short.values())
 
 thresholds = np.round(np.arange(0.28, 0.5 + 1e-9, 0.02), 2)
 res_colors = {

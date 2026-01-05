@@ -41,11 +41,7 @@ if [ -z "${STRETCH_NSTEPS:-}" ]; then
     STRETCH_NSTEPS=400000
 fi
 if [ -z "${MD_NSTEPS:-}" ]; then
-    if [ -n "${PBS_JOBID:-}" ]; then
-        MD_NSTEPS=20000000
-    else
-        MD_NSTEPS=5000000
-    fi
+    MD_NSTEPS=100000
 fi
 
 if [ -z "${STRETCH_MDRUN_FLAGS:-}" ]; then

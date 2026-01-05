@@ -45,11 +45,7 @@ for arg in "$@"; do
 done
 
 if [ -z "${MD_NSTEPS:-}" ]; then
-  if [ -n "${PBS_JOBID:-}" ]; then
-    MD_NSTEPS=20000000
-  else
-    MD_NSTEPS=50000000
-  fi
+  MD_NSTEPS=100000
 fi
 
 PLUMED_FILE=${PLUMED_FILE:-"$REPO_ROOT/src/plumed/base.dat"}
