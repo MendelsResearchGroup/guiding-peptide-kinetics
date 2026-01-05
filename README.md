@@ -70,6 +70,13 @@ The preparation scripts create `OUTPUT_DIR` on demand and populate it with the G
    - Applies a time-dependent bias from `src/plumed/stretch.dat` to obtain unfolded conformations.
    - Copies the resulting CV file to `COLVAR_FLAT` for subsequent HLDA training.
 
+5. **Folded + unfolded in one command**
+   ```bash
+   ./src/folded_unfolded.sh <protein_id> [--force]
+   ```
+   - Runs the unbiased folded trajectory (`base_run.sh`), then stretches and continues unbiased to generate the unfolded trajectory.
+   - The unfolded runs write to `stretch.*` and `uf.*` to avoid overwriting `md.*`.
+
 5. **HLDA-biased sampling**
    - For a single biased trajectory, adapt `src/plumed/hlda.dat` with the HLDA coefficients and run:
      ```bash

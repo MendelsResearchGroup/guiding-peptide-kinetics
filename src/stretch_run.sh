@@ -63,6 +63,29 @@ if [ -z "${MD_MDRUN_FLAGS:-}" ]; then
     fi
 fi
 
+STRETCH_DEFFNM=${STRETCH_DEFFNM:-md}
+UF_DEFFNM=${UF_DEFFNM:-$STRETCH_DEFFNM}
+STRETCH_TPR=${STRETCH_TPR:-md.tpr}
+UF_TPR=${UF_TPR:-$STRETCH_TPR}
+STRETCH_CPI=${STRETCH_CPI:-}
+UF_CPI=${UF_CPI:-${STRETCH_DEFFNM}.cpt}
+UF_PLUMED=${UF_PLUMED:-$PLUMED_MD}
+
+stretch_cpi_args=()
+if [ -n "$STRETCH_CPI" ]; then
+    stretch_cpi_args=(-cpi "$STRETCH_CPI")
+fi
+
+uf_cpi_args=()
+if [ -n "$UF_CPI" ]; then
+    uf_cpi_args=(-cpi "$UF_CPI")
+fi
+
+uf_plumed_args=()
+if [ -n "$UF_PLUMED" ]; then
+    uf_plumed_args=(-plumed "$UF_PLUMED")
+fi
+
 (
     cd "$OUTPUT_DIR"
 
@@ -73,12 +96,18 @@ fi
     # awk '{name=substr($0,13,4); if (name ~ /OT1/) $0=substr($0,1,12) " O  " substr($0,17); else if (name ~ /OT2/) $0=substr($0,1,12) "OXT " substr($0,17); print }' reference.pdb > tmp.pdb && mv tmp.pdb reference.pdb
 
     printf "${YELLOW}\n---------- [Stretch protein] ----------${NC}\n"
-    $GMX_CMD mdrun $STRETCH_MDRUN_FLAGS -v -deffnm md -nsteps "$STRETCH_NSTEPS" -plumed "$PLUMED_STRETCH"
+    $GMX_CMD mdrun $STRETCH_MDRUN_FLAGS -v \
+        -s "$STRETCH_TPR" -deffnm "$STRETCH_DEFFNM" -nsteps "$STRETCH_NSTEPS" \
+        -plumed "$PLUMED_STRETCH" "${stretch_cpi_args[@]}"
 
     # printf "${CYAN}\n---------- [MD simulation] ----------${NC}\n"
-    $GMX_CMD mdrun $MD_MDRUN_FLAGS -v -deffnm md -nsteps "$MD_NSTEPS" -plumed "$PLUMED_MD" -cpi md.cpt
-    mv COLVAR COLVAR_FLAT
+    $GMX_CMD mdrun $MD_MDRUN_FLAGS -v \
+        -s "$UF_TPR" -deffnm "$UF_DEFFNM" -nsteps "$MD_NSTEPS" \
+        "${uf_plumed_args[@]}" "${uf_cpi_args[@]}"
+    if [ -f COLVAR ]; then
+        mv COLVAR COLVAR_FLAT
+    fi
 
     # printf "\n${CYAN}---------- [Center Protein in Box] ----------${NC}\n"
-    printf "1\n1\n" | $GMX_CMD trjconv -s md.tpr -f md.xtc -o md_center.xtc -center -pbc mol
+    printf "1\n1\n" | $GMX_CMD trjconv -s "$UF_TPR" -f "${UF_DEFFNM}.xtc" -o "${UF_DEFFNM}_center.xtc" -center -pbc mol
 )
