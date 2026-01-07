@@ -184,28 +184,20 @@ def collect_df(
     wt_vars_U = np.array(lam_slice.loc["WT", "var_U_diag"], float)
 
     rows = []
-    for long_name in required:
-        short = long_to_short.get(long_name)
+    for short in required:
         medium = short_to_medium.get(short)
 
         # locate the matching threshold key with tolerance
         thr_key = next(
-            (k for k in all_mfpt[long_name].keys() if np.isclose(float(k), mfpt_threshold)),
+            (k for k in all_mfpt[short].keys() if np.isclose(float(k), mfpt_threshold)),
             None,
         )
-        if thr_key is None:
-            raise KeyError(f"MFPT threshold {mfpt_threshold} missing for {long_name}")
+        mfpt_samples = np.sort(np.array(all_mfpt[short][thr_key], float))
+        
+        mfpt, lim = estimateMFPT(mfpt_samples)
+        if not quiet:
+            print(f"{short}: {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
 
-        mfpt_samples = np.sort(np.array(all_mfpt[long_name][thr_key], float))
-        if mfpt_samples.size == 0:
-            raise ValueError(f"Empty MFPT samples for {long_name} at threshold {mfpt_threshold}")
-        else:
-            mfpt, lim = estimateMFPT(mfpt_samples)
-            if not quiet:
-                print(f"{long_name} ({short}): {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
-
-        if short not in lam_slice.index:
-            raise KeyError(f"Mutant {short} missing from lambda_df for tF={tF}, tU={tU}")
         lam_row = lam_slice.loc[short]
         varF = np.array(lam_row["var_F_diag"], float)
         varU = np.array(lam_row["var_U_diag"], float)
@@ -222,7 +214,6 @@ def collect_df(
         }
 
         rows.append({
-            "long": long_name,
             "medium": medium,
             "short": short,
             "lambda": float(lam_row["lambda"]),
