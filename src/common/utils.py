@@ -241,3 +241,44 @@ def collect_df(
     df = pd.DataFrame(rows)
     df.set_index("short", inplace=True)
     return df
+
+
+def mfpt_table_from_samples(
+    all_mfpt: dict,
+    mfpt_threshold: float,
+    skip_short: set[str],
+) -> pd.DataFrame:
+    """
+    Compute MFPT summary table for a given threshold using raw MFPT samples.
+
+    Parameters
+    ----------
+    all_mfpt : dict
+        Mapping long protein names -> {threshold -> samples}.
+    mfpt_threshold : float
+        Threshold used for MFPT estimation.
+    skip_short : set[str]
+        Short mutant names to skip.
+    """
+    skip_short = set(skip_short)
+    required = [p for p in proteins if long_to_short.get(p) not in skip_short]
+    missing_proteins = [p for p in required if p not in all_mfpt]
+    if missing_proteins:
+        raise KeyError(f"Missing MFPT entries for proteins: {', '.join(missing_proteins)}")
+
+    rows = []
+    for short in required:
+        # locate the matching threshold key with tolerance
+        thr_key = next(
+            (k for k in all_mfpt[short].keys() if np.isclose(float(k), mfpt_threshold)),
+            None,
+        )
+        mfpt_samples = np.sort(np.array(all_mfpt[short][thr_key], float))
+        mfpt, lim = estimateMFPT(mfpt_samples, 10)
+        rows.append({
+            "Mutant": short,
+            "mfpt": mfpt,
+            "lim": lim,
+        })
+
+    return pd.DataFrame(rows)

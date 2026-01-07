@@ -12,5 +12,6 @@ dependencies:
   - py3Dmol
   - ipywidgets 
   - matplotlib
+  - statsmodels
   - ruff
   - scipy

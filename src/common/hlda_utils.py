@@ -9,25 +9,35 @@ import pandas as pd
 from common.utils import _load_colvar_pair, _aggregate_residue_weights
 
 
-def hlda_from_moments(muA, SA, muB, SB, desc_cols):
-    muA = np.asarray(muA, float)
-    muB = np.asarray(muB, float)
-    SA = np.asarray(SA, float)
-    SB = np.asarray(SB, float)
+
+def hlda_from_moments(muA, SA, muB, SB, desc_cols, ridge=1e-8):
+    p = muA.size
+    I = np.eye(p)
+
+    SA = SA + ridge * I
+    SB = SB + ridge * I
 
     d = muA - muB
-
-    Sw_inv = np.linalg.inv(SA) + np.linalg.inv(SB)
     Sb = 0.5 * np.outer(d, d)
 
-    eigvals, eigvecs = np.linalg.eig(Sw_inv @ Sb)
-    idx = int(np.argmax(np.real(eigvals)))
-    lam = float(np.real(eigvals[idx]))
-    w = np.real(eigvecs[:, idx])
+    Sw_inv = np.linalg.inv(SA) + np.linalg.inv(SB)
+    Sw = np.linalg.inv(Sw_inv)
 
-    # Sw = np.linalg.inv(Sw_inv)
+    L = np.linalg.cholesky(Sw)
+    Linv = np.linalg.inv(L)
+    A = Linv @ Sb @ Linv.T
+
+    evals, evecs = np.linalg.eigh(A)
+    idx = int(np.argmax(evals))
+    lam = float(evals[idx])
+
+    v = evecs[:, idx]
+    w = np.linalg.solve(L.T, v)
+
     # w = w / np.sqrt(float(w.T @ Sw @ w))
 
+    # score = float(w.T @ Sb @ w)
+    # score_norm = score / np.trace(Sb)
     return pd.Series(w, index=desc_cols), lam
 
 
@@ -116,7 +126,7 @@ def compute_lambda_grid(
                 covU_red = covU[np.ix_(keep_idx, keep_idx)]
 
                 weights_kept, lam = hlda_from_moments(muF_red, covF_red, muU_red, covU_red, kept_cols)
-
+            
                 full_weights = complete_weights(desc_cols, kept_cols, weights_kept, covF, covU, keep_idx)
 
                 full_weights = {k: round(v, 2) for k, v in full_weights.items()}
@@ -238,14 +248,3 @@ def complete_weights(desc_cols, kept_cols, weights_kept, covF, covU, keep_idx):
         full_weights[desc] = float(weights_kept.get(mapped_desc, 0.0))
 
     return full_weights
-
-__all__ = [
-    "hlda_from_moments",
-    "prune",
-    "complete_weights",
-    "bin_sufficient_stats",
-    "aggregate_moments",
-    "centers_from_edges",
-    "moments_from_mask",
-    "state_mean",
-]
