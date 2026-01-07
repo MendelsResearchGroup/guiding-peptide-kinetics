@@ -194,7 +194,7 @@ def collect_df(
         )
         mfpt_samples = np.sort(np.array(all_mfpt[short][thr_key], float))
         
-        mfpt, lim = estimateMFPT(mfpt_samples)
+        mfpt, lim = estimateMFPT(mfpt_samples, 10)
         if not quiet:
             print(f"{short}: {(mfpt * 1e-6):.4g} us, extra: {lim:.4g}")
 
