@@ -67,7 +67,7 @@ def scatter_with_labels(
         if annotate:
             ax.text(
                 row[x_col],
-                row[y_col],
+                row[y_col] + 0.05,
                 labels.iloc[i],
                 fontsize=8,
                 ha="center",

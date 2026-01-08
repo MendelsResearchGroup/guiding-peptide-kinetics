@@ -230,7 +230,7 @@ def collect_df(
             "Tm": Tm["Tm"].get(short),
             "dTm": (Tm["Tm"].get(short) - Tm["Tm"].get("WT")) if short in Tm.index else np.nan,
             "abs_dTm": abs(Tm["Tm"].get(short) - Tm["Tm"].get("WT")) if short in Tm.index else np.nan,
-            "n_desc": int(lam_row["n_desc"]),
+            # "n_desc": int(lam_row["n_desc"]),
             "nF": int(lam_row["nF"]),
             "nU": int(lam_row["nU"]),
             "mean_rmsd_F": float(lam_row["mean_rmsd_F"]) if "mean_rmsd_F" in lam_row else np.nan,

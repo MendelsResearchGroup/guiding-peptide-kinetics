@@ -8,70 +8,62 @@ import pandas as pd
 
 from common.utils import _load_colvar_pair, _aggregate_residue_weights
 
+from scipy.stats import spearmanr
 
 
 def hlda_from_moments(muA, SA, muB, SB, desc_cols, ridge=1e-8):
-    p = muA.size
-    I = np.eye(p)
-
-    SA = SA + ridge * I
-    SB = SB + ridge * I
+    muA = np.asarray(muA, float)
+    muB = np.asarray(muB, float)
+    SA = np.asarray(SA, float)
+    SB = np.asarray(SB, float)
 
     d = muA - muB
     Sb = 0.5 * np.outer(d, d)
 
     Sw_inv = np.linalg.inv(SA) + np.linalg.inv(SB)
+
+    eigvals, eigvecs = np.linalg.eig(Sw_inv @ Sb)
+    idx = int(np.argmax(np.real(eigvals)))
+    lam = float(np.real(eigvals[idx]))
+    w = np.real(eigvecs[:, idx])
+
     Sw = np.linalg.inv(Sw_inv)
+    w = w / np.sqrt(float(w.T @ Sw @ w))
 
-    L = np.linalg.cholesky(Sw)
-    Linv = np.linalg.inv(L)
-    A = Linv @ Sb @ Linv.T
-
-    evals, evecs = np.linalg.eigh(A)
-    idx = int(np.argmax(evals))
-    lam = float(evals[idx])
-
-    v = evecs[:, idx]
-    w = np.linalg.solve(L.T, v)
-
-    # w = w / np.sqrt(float(w.T @ Sw @ w))
-
-    # score = float(w.T @ Sb @ w)
-    # score_norm = score / np.trace(Sb)
     return pd.Series(w, index=desc_cols), lam
 
 
-def prune(cov_pooled, desc_cols, threshold: float):
-    """
-    Drop highly correlated descriptors using a pooled covariance (folded + unfolded).
-    """
-    def prune_one(cov):
-        keep = list(range(cov.shape[0]))
-        while len(keep) > 1:
-            sub = cov[np.ix_(keep, keep)]
-            std = np.sqrt(np.diag(sub))
-            denom = std[:, None] * std[None, :]
-            corr = np.where(denom > 0, sub / denom, 0.0)
-            
-            np.fill_diagonal(corr, 0.0)
-            i, j = np.unravel_index(np.argmax(np.abs(corr)), corr.shape)
-            if abs(corr[i, j]) < threshold:
-                break
-            keep.pop(j)
-        return set(keep)
+def _spearman_abs_corr(X: np.ndarray) -> np.ndarray:
+    if X.size == 0 or X.shape[0] < 2:
+        return np.zeros((X.shape[1], X.shape[1]), dtype=float)
+    corr, _ = spearmanr(X, axis=0)
+    if np.isscalar(corr):
+        return np.array([[1.0]], dtype=float)
+    corr = np.abs(corr)
+    return np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
 
-    keep_idx = sorted(prune_one(cov_pooled))
+
+def prune(X_F, X_U, desc_cols, threshold: float):
+    """
+    Drop highly correlated descriptors using Spearman rank correlation computed
+    separately on folded/unfolded samples (union of drops).
+    """
+    corrF = _spearman_abs_corr(X_F)
+    corrU = _spearman_abs_corr(X_U)
+    corr = np.maximum(corrF, corrU)
+    lower = np.tril(corr, k=-1)
+
+    to_drop = [j for j in range(lower.shape[1]) if np.any(lower[:, j] > threshold)]
+    keep_idx = [i for i in range(len(desc_cols)) if i not in set(to_drop)]
     kept_cols = [desc_cols[i] for i in keep_idx]
     return kept_cols, keep_idx
-
-
 
 
 def compute_lambda_grid(
     base_dir,
     tF_grid: Iterable[float] | None = None,
     tU_grid: Iterable[float] | None = None,
-    sample_n: int = 1_000_000,
+    sample_n: int = 1000000,
     n_bins: int = 200,
     rmsd_col: str = "rmsd_ca",
     prune_threshold: float = 0.93,
@@ -94,7 +86,6 @@ def compute_lambda_grid(
         X_U = df_UF_w[desc_cols].to_numpy()
         rmsd_F = df_F_w[rmsd_col].to_numpy()
         rmsd_U = df_UF_w[rmsd_col].to_numpy()
-        
         eF, cF, sF, S2F = bin_sufficient_stats(df_F_w, desc_cols, rmsd_col, n_bins)
         eU, cU, sU, S2U = bin_sufficient_stats(df_UF_w, desc_cols, rmsd_col, n_bins)
 
@@ -104,8 +95,6 @@ def compute_lambda_grid(
         for tF in tF_grid:
             mask_F = cF_cent <= tF
             muF, covF, nF = aggregate_moments(cF, sF, S2F, mask_F)
-            if covF is None or nF < 2:
-                continue
 
             for tU in tU_grid:
                 if tU <= tF:
@@ -113,20 +102,21 @@ def compute_lambda_grid(
 
                 mask_U = cU_cent >= tU
                 muU, covU, nU = aggregate_moments(cU, sU, S2U, mask_U)
-                if covU is None or nU < 2:
-                    continue
 
-                pooled = np.vstack([X_F[rmsd_F <= tF], X_U[rmsd_U >= tU]])
-                cov_pooled = np.cov(pooled, rowvar=False, ddof=1)
-                kept_cols, keep_idx = prune(cov_pooled, desc_cols, threshold=prune_threshold)
+                X_F_thr = X_F[rmsd_F <= tF]
+                X_U_thr = X_U[rmsd_U >= tU]
+                kept_cols, keep_idx = prune(
+                    X_F_thr, X_U_thr, desc_cols, threshold=prune_threshold
+                )
 
-                muF_red = muF[keep_idx]
-                covF_red = covF[np.ix_(keep_idx, keep_idx)]
-                muU_red = muU[keep_idx]
-                covU_red = covU[np.ix_(keep_idx, keep_idx)]
+                weights_kept, lam = hlda_from_moments(
+                    muF[keep_idx],
+                    covF[np.ix_(keep_idx, keep_idx)],
+                    muU[keep_idx],
+                    covU[np.ix_(keep_idx, keep_idx)],
+                    kept_cols,
+                )
 
-                weights_kept, lam = hlda_from_moments(muF_red, covF_red, muU_red, covU_red, kept_cols)
-            
                 full_weights = complete_weights(desc_cols, kept_cols, weights_kept, covF, covU, keep_idx)
 
                 full_weights = {k: round(v, 2) for k, v in full_weights.items()}
@@ -137,7 +127,6 @@ def compute_lambda_grid(
                     "tF": float(tF),
                     "tU": float(tU),
                     "lambda": float(lam),
-                    "n_desc": len(kept_cols),
                     "nF": nF,
                     "nU": nU,
                     "var_F_diag": np.diag(covF).astype(float).tolist(),
@@ -156,6 +145,7 @@ def load_lambda_grid(
 ) -> pd.DataFrame:
     """
     Load the cached HLDA (tF, tU) grid or compute it if missing.
+    Uses separate Spearman pruning by default.
     """
     cache_path = Path(cache_path)
     if cache_path.exists() and not force:
@@ -193,9 +183,7 @@ def bin_sufficient_stats(df: pd.DataFrame, desc_cols: list[str], rmsd_col: str, 
 
 def aggregate_moments(counts, sums, S2, mask: np.ndarray):
     n = counts[mask].sum()
-    if n < 2:
-        return None, None, int(n)
-
+    
     s = sums[mask].sum(axis=0)
     S = S2[mask].sum(axis=0)
 
@@ -212,15 +200,10 @@ def centers_from_edges(edges):
 
 def moments_from_mask(df: pd.DataFrame, desc_cols: list[str], mask: pd.Series):
     subset = df.loc[mask, desc_cols]
-    if subset.shape[0] < 2:
-        return None, None, int(subset.shape[0])
+
     mu = subset.mean().to_numpy()
     cov = np.cov(subset.to_numpy(), rowvar=False, ddof=1)
     return mu, cov, int(subset.shape[0])
-
-
-def state_mean(series: pd.Series, mask: pd.Series):
-    return float(series.loc[mask].mean()) if mask.any() else np.nan
 
 
 def complete_weights(desc_cols, kept_cols, weights_kept, covF, covU, keep_idx):
