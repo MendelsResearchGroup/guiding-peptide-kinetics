@@ -15,6 +15,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT_DEFAULT="$(cd "$SCRIPT_DIR/.." && pwd)"
+NSTEPS_DEFAULT=10000000
 
 if [ -n "${PBS_JOBID:-}" ]; then
     source ~/.bashrc
@@ -22,14 +23,13 @@ if [ -n "${PBS_JOBID:-}" ]; then
     REPO_ROOT=${REPO_ROOT:-${PBS_O_WORKDIR:-$HOME/work/protein-toolkit}}
     GMX_CMD=${GMX_CMD:-gmx_mpi}
     FORCE_DEFAULT=true
-    NSTEPS_DEFAULT=50000000
 else
     REPO_ROOT=${REPO_ROOT:-$REPO_ROOT_DEFAULT}
     GMX_CMD=${GMX_CMD:-gmx}
     FORCE_DEFAULT=false
-    NSTEPS_DEFAULT=3000000
 fi
 
+echo "$REPO_ROOT"
 cd "$REPO_ROOT"
 
 # ------------------ constants ------------------
@@ -90,8 +90,9 @@ PLUMED="${DEFFNM}_plumed.dat"
     fi
 
     mkdir -p "$RUN_DIR"
-    cp "$REPO_ROOT/data/$MDP" "$OUTPUT_DIR/$GRO" "$OUTPUT_DIR/$TOP" \
-        "$OUTPUT_DIR/$CPT" "$REPO_ROOT/data/$BASE/$REF" "$RUN_DIR/"
+    echo "$OUTPUT_DIR/$GRO"
+    cp "$REPO_ROOT/data/$MDP" "$REPO_ROOT/$OUTPUT_DIR/$GRO" "$REPO_ROOT/$OUTPUT_DIR/$TOP" \
+        "$REPO_ROOT/$OUTPUT_DIR/$CPT" "$REPO_ROOT/data/$BASE/$REF" "$RUN_DIR/"
 
     if [ -f "$PLUMED_BASE" ]; then
         cp "$PLUMED_BASE" "$RUN_DIR/"
