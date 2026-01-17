@@ -5,8 +5,12 @@ import pandas as pd
 def _default_label(df, label_col):
     if label_col is None:
         return pd.Series(df.index.astype(str), index=df.index)
-    return df[label_col].astype(str)
-
+    col = df[label_col]
+    if pd.api.types.is_numeric_dtype(col):
+        numeric = pd.to_numeric(col, errors="coerce")
+        if numeric.notna().all() and np.allclose(numeric, np.round(numeric)):
+            return numeric.round(0).astype(int).astype(str)
+    return col.astype(str)
 
 def scatter_with_labels(
     ax,
@@ -64,12 +68,13 @@ def scatter_with_labels(
             alpha=alpha,
             marker=marker,
         )
+        
         if annotate:
             ax.text(
                 row[x_col],
-                row[y_col] + 0.05,
+                row[y_col] + 0.08,
                 labels.iloc[i],
-                fontsize=8,
+                fontsize=7,
                 ha="center",
                 va="bottom",
             )
