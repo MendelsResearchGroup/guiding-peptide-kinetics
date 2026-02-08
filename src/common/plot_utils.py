@@ -78,3 +78,17 @@ def scatter_with_labels(
                 ha="center",
                 va="bottom",
             )
+
+
+def add_linear_fit(ax, x, y, color="lightblue", lw=2.0, alpha=1.0, zorder=2):
+    x = np.asarray(x, float)
+    y = np.asarray(y, float)
+    mask = np.isfinite(x) & np.isfinite(y)
+    if mask.sum() < 2:
+        return None
+
+    a, b = np.polyfit(x[mask], y[mask], 1)
+    xx = np.linspace(x[mask].min(), x[mask].max(), 200)
+    yy = a * xx + b
+    ax.plot(xx, yy, color=color, lw=lw, alpha=alpha, zorder=zorder)
+    return a, b
