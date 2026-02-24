@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the software and the associated paper."
+title: "protein-toolkit"
+type: software
+license: MIT
+authors:
+  - family-names: Zhilkin
+    given-names: Alexander
+  - family-names: Medaparambath
+    given-names: Muralika
+  - family-names: Mendels
+    given-names: Dan
+preferred-citation:
+  type: article
+  title: "Guiding Peptide Kinetics via Collective-Variable Tuning of Free-Energy Barriers"
+  authors:
+    - family-names: Zhilkin
+      given-names: Alexander
+    - family-names: Medaparambath
+      given-names: Muralika
+    - family-names: Mendels
+      given-names: Dan
+  journal: "arXiv"
+  year: 2026
+  doi: "10.48550/arXiv.2602.19936"
+  identifiers:
+    - type: other
+      value: "arXiv:2602.19936"
+      description: "arXiv identifier"

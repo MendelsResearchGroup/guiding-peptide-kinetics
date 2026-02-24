@@ -8,7 +8,7 @@
 # Usage:
 #   ./fpt_single_run.sh <ID> <PROTEIN> [--force]
 # Example:
-#   ./fpt_single_run.sh 7 chignolin           # writes to data/chignolin/output/run_007/
+#   ./fpt_single_run.sh 7 WT                  # writes to data/mutants/WT/output/run_007/ (or legacy data/WT/...)
 #   ./fpt_single_run.sh 7 chignolin --force   # overwrite if already exists
 #
 set -euo pipefail
@@ -92,7 +92,7 @@ PLUMED="${DEFFNM}_plumed.dat"
     mkdir -p "$RUN_DIR"
     echo "$OUTPUT_DIR/$GRO"
     cp "$REPO_ROOT/data/$MDP" "$REPO_ROOT/$OUTPUT_DIR/$GRO" "$REPO_ROOT/$OUTPUT_DIR/$TOP" \
-        "$REPO_ROOT/$OUTPUT_DIR/$CPT" "$REPO_ROOT/data/$BASE/$REF" "$RUN_DIR/"
+        "$REPO_ROOT/$OUTPUT_DIR/$CPT" "$REPO_ROOT/$INPUT_DIR/$REF" "$RUN_DIR/"
 
     if [ -f "$PLUMED_BASE" ]; then
         cp "$PLUMED_BASE" "$RUN_DIR/"

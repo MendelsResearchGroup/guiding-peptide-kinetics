@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "protein-toolkit"
+version = "0.1.0"
+description = "Utilities and notebooks for peptide HLDA/FES analysis and figure generation"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["STiMetaD"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["common", "common.*", "paper", "paper.*"]
+

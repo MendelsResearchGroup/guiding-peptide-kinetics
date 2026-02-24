@@ -3,15 +3,19 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10
+  - pip
   - nglview
   - pandas
   - mdtraj
   - numpy
   - scipy
+  - seaborn
   - pymol-open-source
   - py3Dmol
-  - ipywidgets 
+  - ipywidgets
+  - ipykernel
+  - jupyterlab
+  - nbconvert
   - matplotlib
   - statsmodels
   - ruff
-  - scipy

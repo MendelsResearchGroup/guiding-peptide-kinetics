@@ -66,7 +66,7 @@ def compute_lambda_grid(
     sample_n: int = 1000000,
     n_bins: int = 200,
     rmsd_col: str = "rmsd_ca",
-    prune_threshold: float = 1,
+    prune_threshold: float = 0.93,
 ):
     """
     Compute HLDA eigenvalues for a grid of (tF, tU) RMSD thresholds.

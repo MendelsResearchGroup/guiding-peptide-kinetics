@@ -199,4 +199,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-data/traj
+data/mutants
+data/hlda_trajectories

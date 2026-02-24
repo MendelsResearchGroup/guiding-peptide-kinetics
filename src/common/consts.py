@@ -90,7 +90,7 @@ groupByResidue = {
     4: ["E4A", "E4G", "E4R", "E4Y"],
     5: ["T5R", "T5G", "T5Y", "T5D"],
     7: ["T7V", "T7Q", "T7R", "T7Y", 'T7G', 'T7D'],
-    9: ["Y9E", "Y9G", "Y9Q", "Y9R", "Y9V", "Y9A"],
+    9: ["Y9E", "Y9G", "Y9Q", "Y9R", "Y9V", "Y9A", "Y9K"],
 }
 
 groupByProperty = {
