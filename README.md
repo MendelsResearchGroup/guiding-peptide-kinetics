@@ -30,9 +30,15 @@ pip install -e .
 Data is stored as split archives in `data_archives/`.
 
 - `data_core.zip` contains shared analysis assets, including preprocessed MFPT files:
-  - `data/mfpt_all_thresholds-new-ref.pkl`
-  - `data/mfpt-pace=25000-new-ref.pkl`
+  - `data/mfpt_threshold_summaries_ref.pkl`
+  - `data/mfpt_samples_pace25000_ref.pkl`
 - `hlda_trajectories_*.zip` contains per-mutant trajectory cache data under `data/hlda_trajectories/`
+
+Short description of the MFPT files used in this paper flow:
+
+- `mfpt_samples_pace25000_ref.pkl`: dictionary keyed by mutant, then threshold, containing per-run MFPT samples from the `PACE=25000` setup (typically about 200 runs per mutant/threshold; a few entries are slightly fewer due to missing/failed runs).
+- `mfpt_threshold_summaries_ref.pkl`: dictionary keyed by MFPT threshold (`lim`), each value a per-mutant summary DataFrame used by notebooks (for example `mfpt`, `lambda`, `tF`, `tU`, `residue_idx`, `property_grp`, `Tm`, `dTm`, `nF`, `nU`, etc.).
+  This summary includes HLDA-derived quantities (for example `lambda`, `tF`, `tU`) through `hlda_lambda_grid.pkl`, which is computed from `data/hlda_trajectories/` via `src/common/hlda_utils.py`.
 
 If you need to rebuild archives from an unpacked `data/` tree:
 
@@ -46,8 +52,31 @@ You can reproduce MFPT-based results in two ways:
 
 1. Generate MFPT samples from FPT simulations using `src/fpt_plumed/` templates (for example through `src/fpt_single_run.sh`).
 2. Use the preprocessed MFPT files from `data_core.zip` (recommended for paper reproduction):
-   - `data/mfpt_all_thresholds-new-ref.pkl`
-   - `data/mfpt-pace=25000-new-ref.pkl`
+   - `data/mfpt_threshold_summaries_ref.pkl`
+   - `data/mfpt_samples_pace25000_ref.pkl`
+
+## How HLDA is run (`hlda_utils`)
+
+HLDA grid generation is implemented in `src/common/hlda_utils.py`.
+
+- `compute_lambda_grid(...)` loads folded/unfolded COLVAR data for each mutant from `data/hlda_trajectories/`, sweeps `(tF, tU)` RMSD thresholds, prunes highly correlated descriptors (Spearman), and computes HLDA weights/eigenvalue (`lambda`) per grid point.
+- `load_lambda_grid(...)` is the notebook-facing entrypoint: it loads cached results from `data/hlda_lambda_grid.pkl` if present, otherwise computes and caches them.
+
+Minimal usage pattern (same flow used by paper notebooks):
+
+```python
+from pathlib import Path
+from common.hlda_utils import load_lambda_grid
+
+data_dir = Path("data")
+lambda_grid = load_lambda_grid(
+    cache_path=data_dir / "hlda_lambda_grid.pkl",
+    base_dir=data_dir / "hlda_trajectories",
+    force=False,
+)
+```
+
+Set `force=True` to recompute the HLDA grid from raw trajectory-derived data.
 
 ## Minimal relevant paths
 
