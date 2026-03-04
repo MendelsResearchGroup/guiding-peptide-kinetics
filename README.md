@@ -1,7 +1,7 @@
 # guiding-peptide-kinetics (Paper Snapshot)
 
 This repository is the fixed snapshot used to reproduce the paper figures and analysis.
-[![DOI](https://zenodo.org/badge/1172607159.svg)](https://doi.org/10.5281/zenodo.18864705)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18864706.svg)](https://doi.org/10.5281/zenodo.18864706)
 
 Paper:
 - [Guiding Peptide Kinetics via Collective-Variable Tuning of Free-Energy Barriers](https://doi.org/10.48550/arXiv.2602.19936)
