@@ -2,6 +2,13 @@
 
 Toolkit for orchestrating GROMACS + PLUMED simulations aimed at extracting Harmonic Linear Discriminant Analysis (HLDA) collective variables for WT and its mutants. The repository couples structure preparation, equilibration, production, stretching, HLDA-biased replicas, and downstream analysis into reproducible shell scripts and notebooks that run on a workstation or an HPC cluster.
 
+## Paper Snapshot Fork
+
+This repository is the constant, paper-facing snapshot for reproducing manuscript analyses and figures.
+
+- Paper: [Guiding Peptide Kinetics via Collective-Variable Tuning of Free-Energy Barriers](https://doi.org/10.48550/arXiv.2602.19936)
+- Scope: stable data + notebooks used to generate the paper plots.
+
 ## Highlights
 
 - Shell entrypoints for simulation stages (`transform_structure.sh`, `nvt_npt.sh`, `base_run.sh`, `stretch_run.sh`, `fpt_single_run.sh`).
@@ -70,9 +77,27 @@ To restore data after clone, unpack from `data_archives/` or `data/archives/`:
 
 The unpacker extracts any `*.zip` it finds into the repository root (expected archive layout includes `data/...` paths).
 
+Archive contents in this fork:
+
+- `data_core.zip`: shared analysis assets and preprocessed MFPT collections, including:
+  - `data/mfpt_all_thresholds-new-ref.pkl`
+  - `data/mfpt-pace=25000-new-ref.pkl`
+- `hlda_trajectories_*.zip`: one archive per mutant for `data/hlda_trajectories/`.
+
+## MFPT Reproducibility Paths
+
+You can reproduce MFPT-based analyses in two ways:
+
+1. Generate new MFPT samples from FPT runs using the templates in `src/fpt_plumed/` (e.g., via `src/fpt_single_run.sh`).
+2. Use preprocessed MFPT data already packaged in `data_core.zip`:
+   - `data/mfpt_all_thresholds-new-ref.pkl`
+   - `data/mfpt-pace=25000-new-ref.pkl`
+
+For paper-figure reproduction, option 2 is the quickest path.
+
 ## Paper Workflow (Current)
 
-The `src/paper_plots/` notebooks are the primary entrypoint for manuscript figures and paper-facing analyses.
+The `src/paper_plots/` notebooks are the primary entrypoint for manuscript figures and paper-facing analyses, and they generate the paper plots from the packaged data.
 
 1. Create the environment and install the repo:
    ```bash
