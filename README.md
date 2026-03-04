@@ -7,7 +7,7 @@ Toolkit for orchestrating GROMACS + PLUMED simulations aimed at extracting H
 - Shell entrypoints for simulation stages (`transform_structure.sh`, `nvt_npt.sh`, `base_run.sh`, `stretch_run.sh`, `fpt_single_run.sh`).
 - PBS-ready scripts that auto-detect scheduler runs (same `*.sh` files work locally or via `qsub`).
 - Ready-to-use PLUMED inputs (`src/plumed/*.dat`, `src/fpt_plumed/*.dat`) and MDP files (`data/*.mdp`).
-- Python utilities and notebooks for HLDA projections, kinetics (STiMetaD), and figure generation.
+- Python utilities and notebooks for HLDA projections, kinetics, and figure generation.
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ Toolkit for orchestrating GROMACS + PLUMED simulations aimed at extracting H
 | `src/plumed/` | PLUMED inputs used during transform, stretch, and HLDA-biased runs. |
 | `src/fpt_plumed/` | PLUMED templates for multi-replica first-passage-time (FPT) runs. |
 | `src/*.ipynb` | Analysis notebooks (HLDA, FES, kinetics, plotting). |
-| `src/paper/` | Paper-focused analysis/plot notebooks and style helpers. |
+| `src/paper_plots/` | Paper-focused analysis/plot notebooks and style helpers. |
 | `data/mutants/` | Preferred location for per-mutant HPC inputs/outputs (`<mutant>/output/...`). |
 | `data/hlda_trajectories/` | Local trajectory cache used by HLDA/paper analyses (formerly `data/traj`). |
 | `data/` | Shared MDP files, CSVs, Pickles, and compatibility paths/symlinks. |
@@ -54,7 +54,15 @@ The repository/runtime code supports this layout directly. If your local data is
 
 ## Zipped Data Workflow
 
-If you keep large data zipped in the repository (or as release assets), place zip files in `data_archives/` or `data/archives/` and unpack after clone:
+To (re)create repo-ready data archives from your local `data/` tree:
+
+```bash
+./scripts/pack_data.sh
+```
+
+This writes `*.zip` archives into `data_archives/` using paths rooted at `data/...`.
+
+To restore data after clone, unpack from `data_archives/` or `data/archives/`:
 
 ```bash
 ./scripts/unpack_data.sh
@@ -64,7 +72,7 @@ The unpacker extracts any `*.zip` it finds into the repository root (expected ar
 
 ## Paper Workflow (Current)
 
-The `src/paper/` notebooks are the primary entrypoint for manuscript figures and paper-facing analyses.
+The `src/paper_plots/` notebooks are the primary entrypoint for manuscript figures and paper-facing analyses.
 
 1. Create the environment and install the repo:
    ```bash
@@ -72,7 +80,7 @@ The `src/paper/` notebooks are the primary entrypoint for manuscript figures and
    conda activate protein-fes
    pip install -e .
    ```
-2. Open the notebooks under `src/paper/` and run the relevant analyses.
+2. Open the notebooks under `src/paper_plots/` and run the relevant analyses.
 3. Ensure required local caches/directories exist (e.g., `data/hlda_trajectories/`, `data/fes_plots/` if using the FES overlay notebook).
 
 ## Running on a cluster
@@ -95,7 +103,6 @@ Adjust queue, resource requests, and email notifications to match your cluster p
 - `data/*.csv`: Precomputed descriptors (averages, variances, eigenvalues) for WT mutants. Used by the HLDA and kinetics notebooks.
 - `data/mfpt*.pkl`: Serialized MFPT collections organised by temperature thresholds.
 - `src/common/consts.py`: Maps mutant identifiers to residue-level annotations and grouping colours used in plots.
-- `src/STiMetaD.py`: Standalone implementation of the STiMetaD estimator (also exposed through the notebooks).
 
 ## Tips & troubleshooting
 

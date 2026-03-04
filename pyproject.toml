@@ -11,9 +11,7 @@ requires-python = ">=3.10"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["STiMetaD"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["common", "common.*", "paper", "paper.*"]
-
+include = ["common", "common.*", "paper_plots", "paper_plots.*"]

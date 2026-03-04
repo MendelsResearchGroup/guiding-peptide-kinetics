@@ -74,7 +74,7 @@ def scatter_with_labels(
                 row[x_col],
                 row[y_col] + 0.08,
                 labels.iloc[i],
-                fontsize=7,
+                fontsize=11,
                 ha="center",
                 va="bottom",
             )
