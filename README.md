@@ -1,10 +1,21 @@
-# guiding-peptide-kinetics (Paper Snapshot)
+# CV-FEST + HLDA for Peptide Kinetics | guiding-peptide-kinetics (JCTC Snapshot)
 
-This repository is the fixed snapshot used to reproduce the paper figures and analysis.
+This repository is the fixed snapshot used to reproduce the figures and analysis from our publication in the Journal of Chemical Theory and Computation (JCTC).
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18864706.svg)](https://doi.org/10.5281/zenodo.18864706)
 
-Paper:
-- [Guiding Peptide Kinetics via Collective-Variable Tuning of Free-Energy Barriers](https://doi.org/10.48550/arXiv.2602.19936)
+Paper (JCTC):
+- Guiding Peptide Conformational Kinetics via Collective-Variable Control of Free-Energy Barriers  
+  https://pubs.acs.org/doi/10.1021/acs.jctc.6c00418
+
+Preprint:
+- https://doi.org/10.48550/arXiv.2602.19936
+
+## Overview
+
+We approach peptide kinetic engineering using HLDA-based collective variables within the CV-FEST framework, constructed only from short simulations confined to folded and unfolded states.
+
+This provides a data-efficient way to model and control free-energy surfaces and barrier heights, enabling prediction of mutation-dependent kinetics and guiding rational peptide design from local fluctuations alone.luctuations alone.
 
 ## Reproduce the paper flow
 
