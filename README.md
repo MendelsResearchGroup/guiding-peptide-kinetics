@@ -5,7 +5,7 @@ This repository is the fixed snapshot used to reproduce the figures and analysis
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18864706.svg)](https://doi.org/10.5281/zenodo.18864706)
 
 Paper (JCTC):
-- Guiding Peptide Conformational Kinetics via Collective-Variable Control of Free-Energy Barriers  
+- Guiding Peptide Kinetics via Collective-Variable Tuning of Free-Energy Barriers
   https://pubs.acs.org/doi/10.1021/acs.jctc.6c00418
 
 Preprint:
@@ -15,7 +15,7 @@ Preprint:
 
 We approach peptide kinetic engineering using HLDA-based collective variables within the CV-FEST framework, constructed only from short simulations confined to folded and unfolded states.
 
-This provides a data-efficient way to model and control free-energy surfaces and barrier heights, enabling prediction of mutation-dependent kinetics and guiding rational peptide design from local fluctuations alone.luctuations alone.
+This provides a data-efficient way to model and control free-energy surfaces and barrier heights, enabling prediction of mutation-dependent kinetics and guiding rational peptide design from local fluctuations alone.
 
 ## Reproduce the paper flow
 
